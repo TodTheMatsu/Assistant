@@ -1,21 +1,10 @@
 import { useState, useEffect } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { motion } from "motion/react"
+import Text from "./Text.jsx";
 function App() {
-  const [result, setResult] = useState("");
-  const renderText = (text, textSize = 'text-xl') => (
-    text.split('').map((char, index) => (
-      <motion.span
-        key={index}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1, transition: { delay: index * 0.005, ease: 'easeOut', duration: 1 } }}
-        viewport={{ once: true }}
-        className={`text-white font-sans font-thin mx-auto text-center w-full ${textSize}`}
-      >
-        {char}
-      </motion.span>
-    ))
-  );
+  const [results, setResults] = useState("");
+
     const fetchAIResponse = async (e) => {
       e.preventDefault();
       console.log(e)
@@ -24,7 +13,10 @@ function App() {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const response = await model.generateContent(e.target[0].value);
-        setResult(response.response.text());
+        const newText = response.response.text();
+
+        // Add the new result to the list of results
+        setResults((prevResults) => [...prevResults, newText]);
       } catch (error) {
         console.error("Error generating AI content:", error);
       }
@@ -33,11 +25,12 @@ function App() {
   return (
     <div className="w-screen h-screen bg-black">
       <div className="w-screen h-screen flex flex-col justify-center items-center">
-        <div className="bg-gray-800 w-1/2 h-1/2 flex flex-col justify-center items-center rounded-xl">
-          <motion.p className="text-3xl font-thin text-white">{renderText(result)}</motion.p>
+        <div className="bg-gray-800 w-[1600px] h-[600px] flex flex-col justify-start items-center rounded-xl">
+          <div className="w-full h-full ustify-center items-start flex flex-col rounded-xl overflow-auto space-y-5 px-10 py-10">
+            {Object.values(results).map((text, index) => ( <Text result={text} />))}
+          </div>
         </div>
-        <form onSubmit={fetchAIResponse}><input  className="bg-gray-600 text-center text-4xl text-white w-1/2 h-24 rounded-xl"/></form>
-        
+        <form className="w-1/2" onSubmit={fetchAIResponse}><input  className="bg-gray-600 text-center text-4xl text-white w-full h-24 rounded-xl"/></form>
       </div>
     </div>
   );
