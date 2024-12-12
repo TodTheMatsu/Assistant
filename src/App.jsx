@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import Text from "./Text.jsx";
 
 function App() {
@@ -39,18 +39,18 @@ function App() {
   }, [history]);
 
   return (
+  <AnimatePresence>
     <div className="w-screen h-screen bg-black">
       <div className="w-screen h-screen flex flex-col justify-center items-center">
-        <div className="bg-white bg-opacity-20 w-[1600px] h-[90%] flex flex-col justify-start items-center rounded-xl">
-          <div
+        <div className="bg-white bg-opacity-20 w-[1600px] h-[98%] flex flex-col justify-start items-center rounded-xl">
+          <motion.div
             ref={resultsRef}
-            className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10"
-          >
+            className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10">
             {clientHistory.map((entry, index) => (
-                <Text key={index} result={entry.parts[0].text} role={entry.role} />
+                <Text key={index} result={entry.parts[0].text} role={entry.role} index={index} />
             ))}
-            {loading && <Text result="Thinking..." role='model'/>}
-          </div>
+            {loading && <Text result="Thinking..." role='model' loading={loading}/>}
+          </motion.div>
           <form className="w-full" onSubmit={fetchAIResponse}>
             <motion.input
               type="text"
@@ -66,6 +66,7 @@ function App() {
         </div>
       </div>
     </div>
+    </AnimatePresence>
   );
 }
 
