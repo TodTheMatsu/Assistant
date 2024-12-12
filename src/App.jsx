@@ -34,18 +34,24 @@ function App() {
 
   useEffect(() => {
     if (resultsRef.current) {
-      resultsRef.current.scrollTop = resultsRef.current.scrollHeight;
+      setTimeout(() => {
+        const { scrollHeight, clientHeight } = resultsRef.current;
+        resultsRef.current.scrollTop = scrollHeight - clientHeight;
+      }, 500); // Add a small delay to ensure the content is rendered
     }
-  }, [history]);
+  }, [clientHistory]);
+  
+  
+  
 
   return (
   <AnimatePresence>
     <div className="w-screen h-screen bg-black">
       <div className="w-screen h-screen flex flex-col justify-center items-center">
-        <div className="bg-white bg-opacity-20 w-[1600px] h-[98%] flex flex-col justify-start items-center rounded-xl">
+        <div className="bg-white rounded-b-xl bg-opacity-20 w-[1600px] h-full flex flex-col justify-start items-center">
           <motion.div
             ref={resultsRef}
-            className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10">
+            className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10 scrollbar scrollbar-thumb-gray-400 scrollbar-corner-white scroll-smooth">
             {clientHistory.map((entry, index) => (
                 <Text key={index} result={entry.parts[0].text} role={entry.role} index={index} />
             ))}

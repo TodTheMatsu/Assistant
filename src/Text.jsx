@@ -45,7 +45,7 @@ function Text({ result, role, loading }) {
       <motion.div 
         initial={{height: 0, opacity: 0}} 
         animate={{height: "auto", opacity: 1, transition: {duration: 0.1, delay: delayTime, ease: "linear"}}}
-        className={`inline-flex backdrop-blur-xl max-w-[80%] rounded-2xl pb-2 px-2 shadow-xl
+        className={`inline-flex backdrop-blur-xl max-w-[80%] rounded-2xl pb-2 px-2 shadow-xl ${loading ? "animate-bounce shadow-blue-600 outline-blue-700 outline-8" : ""}
         ${role === "model" ? "bg-blue-500 bg-opacity-60" : "bg-white bg-opacity-20"}`}
       >
         <motion.p 
