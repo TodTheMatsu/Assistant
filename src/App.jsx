@@ -7,6 +7,7 @@ function App() {
   const [inputText, setInput] = useState(""); // For input text
   const [loading, setLoading] = useState(false); // Loading state
   const [history, setHistory] = useState([]); // To store the conversation history
+  const [clientHistory, setClientHistory] = useState([]);
   const resultsRef = useRef(null);
 
   const handleChange = (e) => {
@@ -16,13 +17,14 @@ function App() {
   const fetchAIResponse = async (e) => {
     e.preventDefault();
     setLoading(true); // Set loading to true
-
+    setClientHistory((prevHistory) => [...prevHistory,   { role: "user", parts: [{ text: inputText }] },]);
     try {
       const genAI = new GoogleGenerativeAI("AIzaSyCwIq3Z0liDWLF2J1AF5waP87Mn0Rt2FSw");
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       setInput("");
       const chat = model.startChat({ history: history });
       const result = await chat.sendMessage(e.target[0].value);
+      setClientHistory(history)
     } catch (error) {
       console.error("Error generating AI content:", error);
     } finally {
@@ -44,7 +46,7 @@ function App() {
             ref={resultsRef}
             className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10"
           >
-            {history.map((entry, index) => (
+            {clientHistory.map((entry, index) => (
                 <Text key={index} result={entry.parts[0].text} role={entry.role} />
             ))}
             {loading && <Text result="Thinking..." role='model'/>}
