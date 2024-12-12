@@ -23,7 +23,6 @@ function App() {
       setInput("");
       const chat = model.startChat({ history: history });
       const result = await chat.sendMessage(e.target[0].value);
-      console.log(history)
     } catch (error) {
       console.error("Error generating AI content:", error);
     } finally {
@@ -46,11 +45,9 @@ function App() {
             className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10"
           >
             {history.map((entry, index) => (
-              entry.parts.map((part, partIndex) => (
-                <Text key={`${index}-${partIndex}`} result={part.text} />
-              ))
+                <Text key={index} result={entry.parts[0].text} role={entry.role} />
             ))}
-            {loading && <Text result="Thinking..." />} {/* Render loading text */}
+            {loading && <Text result="Thinking..." role='model'/>}
           </div>
           <form className="w-full" onSubmit={fetchAIResponse}>
             <motion.input
