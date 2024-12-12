@@ -60,7 +60,8 @@ function App() {
               initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
               transition={{ duration: 0.75, ease: "linear" }}
               whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)" }}
-              className="bg-white bg-opacity-20 text-left text-4xl text-white w-full h-24 rounded-xl focus:outline-none focus:border-2 border-blue-500 ring-blue-500"
+              className="bg-white bg-opacity-20 text-left text-4xl px-5
+               text-white w-full h-24 rounded-xl focus:outline-none focus:border-2 border-blue-500 ring-blue-500"
             />
           </form>
         </div>
