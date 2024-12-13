@@ -47,8 +47,8 @@ function App() {
   return (
   <AnimatePresence>
     <div className="w-screen h-screen bg-black">
-      <div className="w-screen h-screen flex flex-col justify-center items-center">
-        <div className="bg-white rounded-b-xl bg-opacity-20 w-[1600px] h-full flex flex-col justify-start items-center">
+      <div className="w-screen h-screen flex flex-col justify-center items-end">
+        <div className="bg-white bg-opacity-20 w-[1600px] h-full flex flex-col justify-start items-center">
           <motion.div
             ref={resultsRef}
             className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10 scrollbar scrollbar-thumb-gray-400 scrollbar-corner-white scroll-smooth">
@@ -57,7 +57,7 @@ function App() {
             ))}
             {loading && <Text result="Thinking..." role='model' loading={loading}/>}
           </motion.div>
-          <form className="w-full" onSubmit={fetchAIResponse}>
+          <form className="w-full flex justify-center items-center pb-5" onSubmit={fetchAIResponse}>
             <motion.input
               type="text"
               value={inputText}
@@ -66,8 +66,8 @@ function App() {
               initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
               transition={{ duration: 0.75, ease: "linear" }}
               whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)" }}
-              className="bg-white bg-opacity-20 text-left text-4xl px-5
-               text-white w-full h-24 rounded-xl focus:outline-none focus:border-2 border-blue-500 ring-blue-500"
+              className="bg-white bg-opacity-20 text-left text-xl px-5
+               text-white w-1/2 h-24 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500"
             />
           </form>
         </div>
