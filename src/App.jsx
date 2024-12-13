@@ -9,6 +9,7 @@ function App() {
   const [history, setHistory] = useState([]); // To store the conversation history
   const [clientHistory, setClientHistory] = useState([]);
   const [previousChats, setPreviousChats] = useState([]);
+  const [onExistingChat, setOnExistingChat] = useState(false);
   const resultsRef = useRef(null);
   const genAI = new GoogleGenerativeAI("AIzaSyCwIq3Z0liDWLF2J1AF5waP87Mn0Rt2FSw");
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -37,6 +38,7 @@ function App() {
     setHistory(chat.history);
     setInput("");
     console.log(previousChats)
+    setOnExistingChat(true);
   };
 
   const createTitle = async (chatHistory) => {
@@ -54,6 +56,13 @@ function App() {
   const createChat = async () => {
     if (history.length === 0) {
       return; 
+    }
+    if (onExistingChat === true) {
+      setOnExistingChat(false);
+      setHistory([]);
+      setClientHistory([]); 
+      setInput("");
+      return;
     }
     const updatedHistoy = [...history];
     const title = await createTitle(history); 
