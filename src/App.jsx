@@ -8,8 +8,10 @@ function App() {
   const [loading, setLoading] = useState(false); // Loading state
   const [history, setHistory] = useState([]); // To store the conversation history
   const [clientHistory, setClientHistory] = useState([]);
+  const [previousChats, setPreviousChats] = useState([]);
   const resultsRef = useRef(null);
-
+  const genAI = new GoogleGenerativeAI("AIzaSyCwIq3Z0liDWLF2J1AF5waP87Mn0Rt2FSw");
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   const handleChange = (e) => {
     setInput(e.target.value);
   };
@@ -19,8 +21,6 @@ function App() {
     setLoading(true); // Set loading to true
     setClientHistory((prevHistory) => [...prevHistory,   { role: "user", parts: [{ text: inputText }] },]);
     try {
-      const genAI = new GoogleGenerativeAI("AIzaSyCwIq3Z0liDWLF2J1AF5waP87Mn0Rt2FSw");
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       setInput("");
       const chat = model.startChat({ history: history });
       const result = await chat.sendMessage(e.target[0].value);
@@ -32,6 +32,28 @@ function App() {
     }
   };
 
+  const createTitle = async (chatHistory) => {
+    try {
+      const prompt = "Summarize this conversation in a few words: " + JSON.stringify(chatHistory);
+      console.log(prompt);
+      const result = await model.generateContent(prompt);
+      return result.response.text(); // Assuming `text` contains the generated title
+    } catch (error) {
+      console.error("Error generating AI content:", error);
+      return "Untitled Chat"; // Fallback title
+    }
+  };
+  
+
+  const createChat = async () => {
+    const title = await createTitle(history); // Generate title for the current chat
+    setPreviousChats((prev) => [...prev, { history, title }]); // Save the chat and its title
+    setHistory([]);
+    setClientHistory([]);
+    setInput("");
+  };
+  
+
   useEffect(() => {
     if (resultsRef.current) {
       setTimeout(() => {
@@ -40,8 +62,6 @@ function App() {
       }, 500); // Add a small delay to ensure the content is rendered
     }
   }, [clientHistory]);
-  
-  
   
 
   return (
@@ -57,7 +77,19 @@ function App() {
         </svg>
         <h1 className="text-2xl text-white font-thin">Previous chat</h1>
         <div className="w-full backdrop-blur-sm rounded-2xl flex flex-col justify-center items-center py-2 bg-white bg-opacity-20 gap-2 px-2">
-          <motion.button initial={{ scale: 1 }} whileHover={{scaleY:1.2}} className="w-full h-10 hover:bg-opacity-20 rounded-3xl bg-white bg-opacity-40 "></motion.button>
+        <motion.button onClick={createChat} initial={{ scale: 1 }} whileHover={{scaleY:1.2}} className="w-1/2 text-white h-10 hover:bg-opacity-20 rounded-3xl bg-white bg-opacity-40 ">New chat</motion.button>
+        {previousChats.map((chat, index) => (
+          <motion.button 
+            key={index} 
+            initial={{ scale: 1 }} 
+            whileHover={{ scale: 1.1 }} 
+            className="w-full hover:bg-opacity-20 py-2 rounded-3xl bg-white bg-opacity-40 flex flex-grow  text-white"
+          >
+            {chat.title}
+          </motion.button>
+        ))}
+
+        
         </div>
       </motion.div>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.5, delay: 1 } }} viewport={{ once: true }}
