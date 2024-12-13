@@ -18,7 +18,7 @@ function App() {
 
   const fetchAIResponse = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading to true
+    setLoading(true);
     setClientHistory((prevHistory) => [...prevHistory,   { role: "user", parts: [{ text: inputText }] },]);
     try {
       setInput("");
@@ -32,26 +32,37 @@ function App() {
     }
   };
 
+  const loadChat = (chat) => {
+    setClientHistory(chat.history);
+    setHistory(chat.history);
+    setInput("");
+    console.log(previousChats)
+  };
+
   const createTitle = async (chatHistory) => {
     try {
       const prompt = "Summarize this conversation in a few words: " + JSON.stringify(chatHistory);
-      console.log(prompt);
       const result = await model.generateContent(prompt);
-      return result.response.text(); // Assuming `text` contains the generated title
+      return result.response.text();
     } catch (error) {
       console.error("Error generating AI content:", error);
-      return "Untitled Chat"; // Fallback title
+      return "Untitled Chat";
     }
   };
   
 
   const createChat = async () => {
-    const title = await createTitle(history); // Generate title for the current chat
-    setPreviousChats((prev) => [...prev, { history, title }]); // Save the chat and its title
+    if (history.length === 0) {
+      return; 
+    }
+    const updatedHistoy = [...history];
+    const title = await createTitle(history); 
+    setPreviousChats((prev) => [...prev, { history: updatedHistoy, title }]); 
     setHistory([]);
-    setClientHistory([]);
+    setClientHistory([]); 
     setInput("");
   };
+  
   
 
   useEffect(() => {
@@ -67,7 +78,6 @@ function App() {
   return (
   <AnimatePresence>
     <div className="w-screen h-screen bg-black">
-
       <div className="w-screen h-screen flex flex-row justify-center items-end">
       <motion.div initial={{x: -200 }} animate={{x: 0 ,transition: { duration: 0.5, delay: 2 } }} viewport={{ once: true }}
        className="bg-white bg-opacity-30 w-[10%] h-full flex flex-col justify-start items-center">
@@ -77,13 +87,14 @@ function App() {
         </svg>
         <h1 className="text-2xl text-white font-thin">Previous chat</h1>
         <div className="w-full backdrop-blur-sm rounded-2xl flex flex-col justify-center items-center py-2 bg-white bg-opacity-20 gap-2 px-2">
-        <motion.button onClick={createChat} initial={{ scale: 1 }} whileHover={{scaleY:1.2}} className="w-1/2 text-white h-10 hover:bg-opacity-20 rounded-3xl bg-white bg-opacity-40 ">New chat</motion.button>
+        <motion.button onClick={createChat} initial={{ scale: 1 }} whileHover={{scale:1.1}} className="w-1/2 text-white h-10 hover:bg-opacity-20 rounded-3xl bg-white bg-opacity-40 ">New chat</motion.button>
         {previousChats.map((chat, index) => (
           <motion.button 
             key={index} 
             initial={{ scale: 1 }} 
             whileHover={{ scale: 1.1 }} 
-            className="w-full hover:bg-opacity-20 py-2 rounded-3xl bg-white bg-opacity-40 flex flex-grow  text-white"
+            className="w-full hover:bg-opacity-20 py-2 rounded-3xl bg-white bg-opacity-40 flex flex-grow px-2 text-center text-white"
+            onClick={() => loadChat(chat)}
           >
             {chat.title}
           </motion.button>
