@@ -63,7 +63,7 @@ function App() {
               value={inputText}
               onChange={handleChange}
               placeholder="Enter text"
-              initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "150px" }}
+              initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "10%" }}
               transition={{ duration: 0.2, ease: "linear" }}
               whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)",width: "50%" }}
               whileHover={{width: "50%"}}
