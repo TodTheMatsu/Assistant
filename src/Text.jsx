@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
 function Text({ result, role, loading }) {
   const delayTime = loading ? 0.5 : 0.2;
 
-  // Custom renderers for different markdown elements
   const customRenderers = {
     h1: ({ children }) => <h1 className="text-3xl font-bold mb-2">{children}</h1>,
     h2: ({ children }) => <h2 className="text-2xl font-semibold mb-2">{children}</h2>,
@@ -23,20 +23,43 @@ function Text({ result, role, loading }) {
         {children}
       </ol>
     ),
-    li: ({ children }) => (
-      <li className="mb-1">{children}</li>
-    ),
-    
+    li: ({ children }) => <li className="mb-1">{children}</li>,
+
     a: ({ href, children }) => (
-      <a 
-        href={href} 
-        target="_blank" 
-        rel="noopener noreferrer" 
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
         className="text-green-500 hover:underline font-semibold"
       >
         {children}
       </a>
     ),
+
+    code: ({ children }) => (
+      <code className=" text-white p-1 rounded">{children}</code>
+    ),
+
+    pre: ({ children }) => {
+      const copyToClipboard = () => {
+        navigator.clipboard.writeText(children)
+      };
+
+      return (
+        <div className="relative">
+          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto">
+            {children}
+          </pre>
+          <motion.button
+            onClick={copyToClipboard}
+            whileTap={{ scale: 0.9 }}
+            className="absolute top-2 right-2 bg-blue-500 bg-opacity-10 text-white py-1 px-2 rounded text-sm hover:bg-blue-600"
+          >
+            Copy
+          </motion.button>
+        </div>
+      );
+    },
   };
 
   return (
@@ -44,8 +67,8 @@ function Text({ result, role, loading }) {
       <motion.div 
         initial={{height: 0, opacity: 0 , boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)"}} 
         animate={{height: "auto", opacity: 1, transition: {duration: 0.1, delay: delayTime, ease: "linear"},...(loading ? {boxShadow: "0px 0px 15px rgba(59, 130, 246, .8)",   } : {})}}
-        className={`inline-flex backdrop-blur-xl border-2 border-white border-opacity-10 max-w-[80%] rounded-2xl py-2 px-2 shadow-xl ${loading ? "animate-bounce outline-blue-700 outline-8" : ""}
-        ${role === "model" ? "bg-blue-500 bg-opacity-60 glow:border-opacity-25" : "bg-white bg-opacity-20"}`}
+        className={`inline-flex backdrop-blur-xl border-2 border-white border-opacity-0 max-w-[80%] rounded-2xl py-2 px-2 shadow-xl ${loading ? "animate-bounce outline-blue-700 outline-8" : ""}
+        ${role === "model" ? "bg-blue-500 bg-opacity-0" : "bg-white bg-opacity-20"}`}
       >
         <motion.p 
           initial={{opacity: 0}} 
