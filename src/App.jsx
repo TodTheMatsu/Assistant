@@ -115,7 +115,7 @@ function App() {
          className="bg-white bg-opacity-5 flex-grow min-w-[90%] h-full flex flex-col justify-start items-center">
           <motion.div
             ref={resultsRef}
-            className="w-1/2 h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10 scrollbar
+            className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10 scrollbar
              scrollbar-thumb-gray-400 scrollbar-corner-white overflow-x-hidden scroll-smooth">
             {clientHistory.map((entry, index) => (
                 <Text key={index} result={entry.parts[0].text} role={entry.role} index={index} />

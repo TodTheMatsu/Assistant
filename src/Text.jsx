@@ -42,24 +42,26 @@ function Text({ result, role, loading }) {
 
     pre: ({ children }) => {
       const copyToClipboard = () => {
-        navigator.clipboard.writeText(children)
+        const codeText = children.props.children
+        navigator.clipboard.writeText(codeText);
       };
-
+    
       return (
         <div className="relative">
-          <pre className="bg-gray-900 text-white p-4 rounded-lg overflow-auto">
+          <pre className="bg-gray-900 max-w-[100%] text-white text-sm p-4 rounded-lg overflow-auto">
             {children}
           </pre>
           <motion.button
             onClick={copyToClipboard}
             whileTap={{ scale: 0.9 }}
-            className="absolute top-2 right-2 bg-blue-500 bg-opacity-10 text-white py-1 px-2 rounded text-sm hover:bg-blue-600"
+            className="absolute top-2 right-2 bg-blue-900  text-white py-1 px-1 rounded-full  text-sm hover:bg-blue-600"
           >
             Copy
           </motion.button>
         </div>
       );
     },
+    
   };
 
   return (
@@ -73,7 +75,7 @@ function Text({ result, role, loading }) {
         <motion.p 
           initial={{opacity: 0}} 
           animate={{opacity: 1, transition: {delay: delayTime + 0.2, duration: 0.1}}}
-          className="font-thin text-white text-xl"
+          className="font-thin text-white text-xl max-w-[100%]"
         >
           <ReactMarkdown 
             remarkPlugins={[remarkGfm]} 
