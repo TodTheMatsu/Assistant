@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from "motion/react";
 import Text from "./Text.jsx";
 
 function App() {
-  const [inputText, setInput] = useState(""); // For input text
-  const [loading, setLoading] = useState(false); // Loading state
-  const [history, setHistory] = useState([]); // To store the conversation history
+  const [inputText, setInput] = useState(""); 
+  const [loading, setLoading] = useState(false); 
+  const [history, setHistory] = useState([]); 
   const [clientHistory, setClientHistory] = useState([]);
   const [previousChats, setPreviousChats] = useState([]);
   const [onExistingChat, setOnExistingChat] = useState(false);
@@ -43,7 +43,7 @@ function App() {
 
   const createTitle = async (chatHistory) => {
     try {
-      const prompt = "Summarize this conversation in a few words: " + JSON.stringify(chatHistory);
+      const prompt = "Generate a short title for the following chat history: " + JSON.stringify(chatHistory);
       const result = await model.generateContent(prompt);
       return result.response.text();
     } catch (error) {
@@ -102,10 +102,10 @@ function App() {
             key={index} 
             initial={{ scale: 1 }} 
             whileHover={{ scale: 1.1 }} 
-            className="w-full hover:bg-opacity-20 py-2 rounded-3xl bg-white bg-opacity-40 flex flex-grow px-2 text-center text-white"
+            className="w-full hover:bg-opacity-20 py-2 rounded-3xl bg-white bg-opacity-40 flex flex-grow px-2 text-white"
             onClick={() => loadChat(chat)}
           >
-            {chat.title}
+            <p className="w-full text-center">{chat.title}</p>
           </motion.button>
         ))}
 
