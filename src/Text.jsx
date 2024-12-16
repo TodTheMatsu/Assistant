@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
 function Text({ result, role, loading }) {
   const delayTime = loading ? 0.5 : 0.2;
 
@@ -44,9 +43,9 @@ function Text({ result, role, loading }) {
     <div className={`w-full flex ${role === "user" ?  "justify-end" :  " justify-start"}`}>
       <motion.div 
         initial={{height: 0, opacity: 0 , boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)"}} 
-        animate={{height: "auto", opacity: 1, transition: {duration: 0.1, delay: delayTime, ease: "linear"},...(loading ? {boxShadow: "0px 0px 30px rgba(59, 130, 246, .8)",  } : {})}}
-        className={`inline-flex backdrop-blur-xl max-w-[80%] rounded-2xl py-2 px-2 shadow-xl ${loading ? "animate-bounce outline-blue-700 outline-8" : ""}
-        ${role === "model" ? "bg-blue-500 bg-opacity-60" : "bg-white bg-opacity-20"}`}
+        animate={{height: "auto", opacity: 1, transition: {duration: 0.1, delay: delayTime, ease: "linear"},...(loading ? {boxShadow: "0px 0px 15px rgba(59, 130, 246, .8)",   } : {})}}
+        className={`inline-flex backdrop-blur-xl border-2 border-white border-opacity-10 max-w-[80%] rounded-2xl py-2 px-2 shadow-xl ${loading ? "animate-bounce outline-blue-700 outline-8" : ""}
+        ${role === "model" ? "bg-blue-500 bg-opacity-60 glow:border-opacity-25" : "bg-white bg-opacity-20"}`}
       >
         <motion.p 
           initial={{opacity: 0}} 
