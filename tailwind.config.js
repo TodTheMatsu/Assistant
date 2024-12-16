@@ -9,5 +9,6 @@ export default {
   },
   plugins: [
     require('tailwind-scrollbar'),
+    require('@codaworks/react-glow/tailwind'),
   ],
 }
