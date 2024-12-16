@@ -64,12 +64,19 @@ function App() {
       setInput("");
       return;
     }
-    const updatedHistoy = [...history];
-    const title = await createTitle(history); 
-    setPreviousChats((prev) => [...prev, { history: updatedHistoy, title }]); 
+    const updatedHistory = [...history];
+    setPreviousChats((prev) => [...prev, { history: updatedHistory, title: "..." }]); 
     setHistory([]);
     setClientHistory([]); 
     setInput("");
+    setTimeout(async () => {
+      const title = await createTitle(updatedHistory); 
+      setPreviousChats((prev) =>
+        prev.map((chat) =>
+          chat.history === updatedHistory ? { ...chat, title } : chat
+        )
+      );
+    }, 0); 
   };
   
   
@@ -96,8 +103,7 @@ function App() {
         </svg>
         <h1 className="text-lg text-white font-thin">History</h1>
         <div className="w-full mx-20 backdrop-blur-sm rounded-2xl flex flex-col justify-center items-center py-2 bg-white bg-opacity-0 gap-2 px-2">
-        <motion.button onClick={createChat} initial={{ scale: 1 }} whileHover={{scale:1.1}}
-         className="w-1/2 text-white h-10 hover:bg-opacity-10 rounded-xl bg-white bg-opacity-0 ">New chat</motion.button>
+     
         {previousChats.map((chat, index) => (
           <motion.button 
             key={index} 
@@ -109,10 +115,14 @@ function App() {
             <p className="w-full text-center text-lg">{chat.title}</p>
           </motion.button>
         ))}
+           <motion.button onClick={createChat} initial={{ scale: 1 }} whileHover={{scale:1.1}}
+         className="w-1/2 text-white h-10 hover:bg-opacity-10 rounded-xl bg-white bg-opacity-5 ">New chat</motion.button>
         </div>
       </motion.div>
+      <div className="w-full h-full flex flex-col justify-start items-center">
         <motion.div initial={{ opacity: 0 }} animate={{opacity: 1, transition: { duration: 0.5, delay: 1 } }} viewport={{ once: true }}
-         className="bg-white bg-opacity-5 flex-grow min-w-[90%] h-full flex flex-col justify-start items-center">
+         className="bg-white bg-opacity-5 backdrop-blur-3xlflex-grow w-full h-full flex flex-col justify-start items-center 
+         shadow-[inset_0px_30px_600px_rgba(255,255,255,.01)]">
           <motion.div
             ref={resultsRef}
             className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10 scrollbar
@@ -122,7 +132,7 @@ function App() {
             ))}
             {loading && <Text result="Thinking..." role='model' loading={loading}/>}
           </motion.div>
-          
+  
           <form className="w-full flex justify-center items-center py-5" onSubmit={fetchAIResponse}>
             <motion.input
               type="text"
@@ -138,6 +148,7 @@ function App() {
             />
           </form>
         </motion.div>
+        </div>
       </div>
     </div>
     </AnimatePresence>
