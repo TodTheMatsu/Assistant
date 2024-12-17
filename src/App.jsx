@@ -11,7 +11,7 @@ function App() {
   const [previousChats, setPreviousChats] = useState([]);
   const [onExistingChat, setOnExistingChat] = useState(false);
   const resultsRef = useRef(null);
-  const genAI = new GoogleGenerativeAI("AIzaSyCwIq3Z0liDWLF2J1AF5waP87Mn0Rt2FSw");
+  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   const handleChange = (e) => {
     setInput(e.target.value);
