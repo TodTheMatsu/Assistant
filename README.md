@@ -50,29 +50,6 @@ Loads an existing chat session into the application.
 
 ---
 
-## Component Breakdown
-
-### **1. Google Generative AI Integration**
-- Instantiates a `GoogleGenerativeAI` client with the provided API key.
-- Retrieves the AI model using `genAI.getGenerativeModel({ model: "gemini-1.5-flash" })`.
-
-### **2. Animations (using `motion/react`)
-- Animates UI components for enhanced visual effects.
-- Used for:
-  - Sidebar buttons.
-  - Blur decorations.
-  - SVG path animations.
-
-### **3. Refs**
-- `resultsRef` ensures the chat scrolls to the most recent messages after updates.
-
-### **4. UI Components**
-- **Sidebar**: Displays chat history and a button to start new chats.
-- **Chat Display**: Shows the current chat messages, with AI responses and user inputs.
-- **Input Form**: Accepts user input for new messages.
-
----
-
 ## How It Works
 
 1. **Starting a Chat**
