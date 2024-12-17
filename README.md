@@ -1,7 +1,5 @@
 # Assistant
 
-This document provides an overview and detailed documentation for the Chat Application implemented in React with support for Google Generative AI.
-
 ## Overview
 
 The Chat Application enables users to interact with a generative AI model in a chat-like interface. Users can:
