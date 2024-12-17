@@ -1,4 +1,4 @@
-# Documentation for Chat Application
+# Assistant
 
 This document provides an overview and detailed documentation for the Chat Application implemented in React with support for Google Generative AI.
 
