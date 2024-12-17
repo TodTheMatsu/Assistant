@@ -88,6 +88,7 @@ Loads an existing chat session into the application.
    ```env
    VITE_GOOGLE_API_KEY=<your-google-api-key>
    ```
+   - Go to [Google AI Studio](https://aistudio.google.com/apikey) and get your free API key using your google account
 
 4. **Run the Application**
    ```bash
