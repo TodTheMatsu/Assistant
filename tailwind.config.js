@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import tailwindscrollbars from 'tailwind-scrollbar';
+import reactglow from '@codaworks/react-glow/tailwind';
 export default {
   content: [
     "./index.html",
@@ -8,7 +10,7 @@ export default {
     extend: {},
   },
   plugins: [
-    require('tailwind-scrollbar'),
-    require('@codaworks/react-glow/tailwind'),
+    tailwindscrollbars,
+    reactglow
   ],
 }
