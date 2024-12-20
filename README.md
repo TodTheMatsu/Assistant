@@ -8,6 +8,7 @@ The Chat Application enables users to interact with a generative AI model in a c
 - View previous chat history.
 
 The application leverages the `@google/generative-ai` library for AI interactions, `motion/react` for animations, and `useState`/`useEffect` hooks for state and lifecycle management.
+
 [Try it out](https://assistant-c08b.onrender.com/)
 ---
 
