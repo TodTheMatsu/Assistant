@@ -95,6 +95,3 @@ Loads an existing chat session into the application.
    ```
 
 ---
-
-This concludes the documentation for the Chat Application. For additional questions, refer to the code comments or reach out to the development team.
-
