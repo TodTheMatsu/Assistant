@@ -26,6 +26,39 @@ function App() {
     setInput(e.target.value);
   };
 
+  // Handle paste events for clipboard images
+  const handlePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      // Check if the item is an image
+      if (item.type.startsWith('image/')) {
+        e.preventDefault(); // Prevent default paste behavior
+        
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        // Create a preview for the pasted image
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const imageData = {
+            file,
+            preview: event.target.result,
+            name: `pasted-image-${Date.now()}.${item.type.split('/')[1]}`,
+            size: file.size,
+            type: 'image'
+          };
+          
+          setSelectedFiles(prev => [...prev, imageData]);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     
@@ -460,7 +493,29 @@ function App() {
       }, 100); // Small delay to ensure the input field is rendered
     }
   }, [history.length]);
-  
+
+  // Global paste event listener for when input is not focused
+  useEffect(() => {
+    const handleGlobalPaste = (e) => {
+      // Only handle global paste if no input/textarea is focused
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true'
+      );
+      
+      if (!isInputFocused) {
+        handlePaste(e);
+      }
+    };
+
+    document.addEventListener('paste', handleGlobalPaste);
+    
+    return () => {
+      document.removeEventListener('paste', handleGlobalPaste);
+    };
+  }, []);
 
   return (
   <AnimatePresence>
@@ -709,13 +764,14 @@ function App() {
                           type="text"
                           value={inputText}
                           onChange={handleChange}
+                          onPaste={handlePaste}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
                               fetchAIResponse(e);
                             }
                           }}
-                          placeholder="Enter text"
+                          placeholder="Enter text or paste images"
                           initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
                           transition={{ duration: 0.2, ease: "linear" }}
                           className="w-full bg-transparent text-left text-xl px-6 py-4
@@ -910,13 +966,14 @@ function App() {
                       type="text"
                       value={inputText}
                       onChange={handleChange}
+                      onPaste={handlePaste}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
                           fetchAIResponse(e);
                         }
                       }}
-                      placeholder="Enter text"
+                      placeholder="Enter text or paste images"
                       initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
                       transition={{ duration: 0.2, ease: "linear" }}
                       className="w-full bg-transparent text-left text-xl px-6 py-4
