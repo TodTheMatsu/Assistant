@@ -63,6 +63,9 @@ function App() {
         // For new chats, also check if we're still in the same conversation by comparing history length
         (!requestChatContext.isExistingChat ? requestChatContext.historyLength === history.length - 1 : true);
       
+      // For new chats, if we're still on a new chat (not switched to an existing one), we should update
+      const shouldUpdateNewChat = !requestChatContext.isExistingChat && !onExistingChat;
+      
       const updatedHistory = [...historyWithUserMessage, aiMessage];
       
       // Always update the appropriate chat in previousChats based on the original context
@@ -85,8 +88,8 @@ function App() {
         const newChatIndex = previousChats.length;
         setPreviousChats((prev) => [...prev, { history: updatedHistory, title: "..." }]);
         
-        // Only update current chat state if we haven't switched away
-        if (isStillOnSameChat) {
+        // Update current chat state if we haven't switched to an existing chat
+        if (shouldUpdateNewChat || isStillOnSameChat) {
           setOnExistingChat(true);
           setCurrentChatIndex(newChatIndex);
           setHistory(updatedHistory);
@@ -109,14 +112,16 @@ function App() {
     } catch (error) {
       console.error("Error generating AI content:", error);
       // If we're still on the same chat, remove the user message that was added
-      if (requestChatContext.isExistingChat === onExistingChat && 
-          requestChatContext.chatIndex === currentChatIndex) {
+      if ((requestChatContext.isExistingChat === onExistingChat && 
+          requestChatContext.chatIndex === currentChatIndex) ||
+          (!requestChatContext.isExistingChat && !onExistingChat)) {
         setHistory(requestChatContext.currentHistory);
       }
     } finally {
-      // Only clear loading if we're still on the same chat
-      if (requestChatContext.isExistingChat === onExistingChat && 
-          requestChatContext.chatIndex === currentChatIndex) {
+      // Only clear loading if we're still on the same chat or if it's a new chat that should be updated
+      if ((requestChatContext.isExistingChat === onExistingChat && 
+          requestChatContext.chatIndex === currentChatIndex) ||
+          (!requestChatContext.isExistingChat && !onExistingChat)) {
         setLoading(false);
       }
     }
@@ -249,42 +254,45 @@ function App() {
           
           {/* Chat History */}
           <div className="w-full flex flex-col gap-2 flex-1 overflow-x-hidden overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30 pr-1">
-            {previousChats.map((chat, index) => (
-              <motion.div 
-                key={index}
-                className="relative group flex-shrink-0"
-                initial={{ scale: 1 }} 
-                whileHover={{ scale: 1.02 }} 
-                whileTap={{ scale: 0.98 }}
-              >
-                <button 
-                  className="w-full hover:bg-white hover:bg-opacity-10 py-3 px-3 pr-10 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
-                  onClick={() => loadChat(chat, index)}
+            {previousChats.slice().reverse().map((chat, reverseIndex) => {
+              const originalIndex = previousChats.length - 1 - reverseIndex;
+              return (
+                <motion.div 
+                  key={originalIndex}
+                  className="relative group flex-shrink-0"
+                  initial={{ scale: 1 }} 
+                  whileHover={{ scale: 1.02 }} 
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <p className="text-sm truncate">{chat.title}</p>
-                </button>
-                
-                {/* Delete Button */}
-                <motion.button
-                  onClick={(e) => deleteChat(index, e)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:bg-opacity-20 p-1.5 rounded-md transition-all duration-200 flex items-center justify-center"
-                >
-                  <svg 
-                    className="w-4 h-4 text-red-400 hover:text-red-300" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+                  <button 
+                    className="w-full hover:bg-white hover:bg-opacity-10 py-3 px-3 pr-10 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
+                    onClick={() => loadChat(chat, originalIndex)}
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
-                    />
-                  </svg>
-                </motion.button>
-              </motion.div>
-            ))}
+                    <p className="text-sm truncate">{chat.title}</p>
+                  </button>
+                  
+                  {/* Delete Button */}
+                  <motion.button
+                    onClick={(e) => deleteChat(originalIndex, e)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:bg-opacity-20 p-1.5 rounded-md transition-all duration-200 flex items-center justify-center"
+                  >
+                    <svg 
+                      className="w-4 h-4 text-red-400 hover:text-red-300" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                      />
+                    </svg>
+                  </motion.button>
+                </motion.div>
+              );
+            })}
           </div>
           
           {/* User Account Section */}
