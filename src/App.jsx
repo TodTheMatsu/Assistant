@@ -39,7 +39,9 @@ function App() {
       isExistingChat: onExistingChat,
       chatIndex: currentChatIndex,
       currentHistory: [...history],
-      requestId: Date.now() + Math.random() // Unique identifier for this request
+      requestId: Date.now() + Math.random(), // Unique identifier for this request
+      // For new chats, capture the current history length to distinguish between different new chats
+      historyLength: history.length
     };
     
     try {
@@ -57,7 +59,9 @@ function App() {
       // This prevents the bug where switching chats during AI response causes wrong chat to be updated
       const isStillOnSameChat = 
         requestChatContext.isExistingChat === onExistingChat && 
-        requestChatContext.chatIndex === currentChatIndex;
+        requestChatContext.chatIndex === currentChatIndex &&
+        // For new chats, also check if we're still in the same conversation by comparing history length
+        (!requestChatContext.isExistingChat ? requestChatContext.historyLength === history.length - 1 : true);
       
       const updatedHistory = [...historyWithUserMessage, aiMessage];
       
