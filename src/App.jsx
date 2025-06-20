@@ -442,48 +442,80 @@ function App() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.8 }}
-                  className="w-full flex flex-col justify-center items-center space-y-4"
+                  className="w-full flex flex-col justify-center items-center"
                 >
                   <form
                     className="w-full flex justify-center items-center"
                     onSubmit={fetchAIResponse}
                   >
-                    <motion.input
-                      ref={inputRef}
-                      type="text"
-                      value={inputText}
-                      onChange={handleChange}
-                      placeholder="Enter text"
-                      initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
-                      transition={{ duration: 0.2, ease: "linear" }}
-                      whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
-                      whileHover={{ width: "70%" }}
-                      className="bg-white bg-opacity-20 text-left text-xl px-5
-                       text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
-                    />
+                    <div className="relative w-full max-w-2xl">
+                      <motion.input
+                        ref={inputRef}
+                        type="text"
+                        value={inputText}
+                        onChange={handleChange}
+                        placeholder="Enter text"
+                        initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
+                        transition={{ duration: 0.2, ease: "linear" }}
+                        whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)" }}
+                        className="w-full bg-white bg-opacity-20 text-left text-xl px-6 pr-40
+                         text-white h-16 rounded-2xl focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-lg placeholder:text-white placeholder:text-opacity-50"
+                      />
+                      
+                      {/* Search toggle button inside input */}
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <input
+                          type="checkbox"
+                          id="search-toggle"
+                          checked={useSearch}
+                          onChange={(e) => setUseSearch(e.target.checked)}
+                          className="sr-only"
+                        />
+                        <motion.label 
+                          htmlFor="search-toggle" 
+                          className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden ${
+                            useSearch 
+                              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50' 
+                              : 'bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50'
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          style={{ isolation: 'isolate' }}
+                        >
+                          {/* Icon */}
+                          <motion.div
+                            className={`relative z-10 ${useSearch ? 'text-white' : 'text-white/70'}`}
+                            animate={{ rotate: useSearch ? 360 : 0 }}
+                            transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </motion.div>
+                          
+                          {/* Text - hidden on smaller screens */}
+                          <span className="relative z-10 text-sm font-medium hidden sm:block">
+                            Search Web
+                          </span>
+                          
+                          {/* Active indicator */}
+                          {useSearch && (
+                            <motion.div
+                              initial={{ scale: 0, rotate: 180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              exit={{ scale: 0, rotate: -180 }}
+                              transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
+                              className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30"
+                            >
+                              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </motion.div>
+                          )}
+                        </motion.label>
+                      </div>
+                    </div>
                   </form>
-                  
-                  {/* Search toggle */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 1 }}
-                    className="flex items-center space-x-2"
-                  >
-                    <input
-                      type="checkbox"
-                      id="search-toggle"
-                      checked={useSearch}
-                      onChange={(e) => setUseSearch(e.target.checked)}
-                      className="w-4 h-4 text-blue-500 bg-white bg-opacity-20 border-2 border-white border-opacity-30 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label 
-                      htmlFor="search-toggle" 
-                      className="text-sm text-white text-opacity-70 cursor-pointer select-none"
-                    >
-                      Search The Web
-                    </label>
-                  </motion.div>
                 </motion.div>
               </motion.div>
             ) : (
@@ -498,39 +530,76 @@ function App() {
   
           {/* Only show bottom input when there are messages or loading */}
           {(history.length > 0 || loading) && (
-            <div className="w-full flex flex-col justify-center items-center py-5 space-y-3">
+            <div className="w-full flex flex-col justify-center items-center py-5">
               <form className="w-full flex justify-center" onSubmit={fetchAIResponse}>
-                <motion.input
-                  ref={inputRef}
-                  type="text"
-                  value={inputText}
-                  onChange={handleChange}
-                  placeholder="Enter text"
-                  initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
-                  transition={{ duration: 0.2, ease: "linear" }}
-                  whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
-                  whileHover={{ width: "70%" }}
-                  className="bg-white bg-opacity-20 text-left text-xl px-5
-                   text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
-                />
+                <div className="relative w-full max-w-2xl">
+                  <motion.input
+                    ref={inputRef}
+                    type="text"
+                    value={inputText}
+                    onChange={handleChange}
+                    placeholder="Enter text"
+                    initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
+                    transition={{ duration: 0.2, ease: "linear" }}
+                    whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)" }}
+                    className="w-full bg-white bg-opacity-20 text-left text-xl px-6 pr-40
+                     text-white h-16 rounded-2xl focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-lg placeholder:text-white placeholder:text-opacity-50"
+                  />
+                  
+                  {/* Search toggle button inside input */}
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <input
+                      type="checkbox"
+                      id="search-toggle-bottom"
+                      checked={useSearch}
+                      onChange={(e) => setUseSearch(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <motion.label 
+                      htmlFor="search-toggle-bottom" 
+                      className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden ${
+                        useSearch 
+                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50' 
+                          : 'bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50'
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      style={{ isolation: 'isolate' }}
+                    >
+                      {/* Icon */}
+                      <motion.div
+                        className={`relative z-10 ${useSearch ? 'text-white' : 'text-white/70'}`}
+                        animate={{ rotate: useSearch ? 360 : 0 }}
+                        transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </motion.div>
+                      
+                      {/* Text - hidden on smaller screens */}
+                      <span className="relative z-10 text-sm font-medium hidden sm:block">
+                        Search Web
+                      </span>
+                      
+                      {/* Active indicator */}
+                      {useSearch && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: 180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          exit={{ scale: 0, rotate: -180 }}
+                          transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
+                          className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30"
+                        >
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </motion.div>
+                      )}
+                    </motion.label>
+                  </div>
+                </div>
               </form>
-              
-              {/* Search toggle */}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="search-toggle-bottom"
-                  checked={useSearch}
-                  onChange={(e) => setUseSearch(e.target.checked)}
-                  className="w-4 h-4 text-blue-500 bg-white bg-opacity-20 border-2 border-white border-opacity-30 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label 
-                  htmlFor="search-toggle-bottom" 
-                  className="text-sm text-white text-opacity-70 cursor-pointer select-none"
-                >
-                  Search The Web
-                </label>
-              </div>
             </div>
           )}
         </motion.div>
