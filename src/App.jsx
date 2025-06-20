@@ -26,14 +26,20 @@ function App() {
 
   const fetchAIResponse = async (e) => {
     e.preventDefault();
+    
+    // Don't start a new request if already loading
+    if (loading) return;
+    
     setLoading(true);
     const userMessage = { role: "user", parts: [{ text: inputText }] };
+    const requestInput = inputText; // Store the input text before clearing it
     
     // Capture the current chat context at the time of the request
     const requestChatContext = {
       isExistingChat: onExistingChat,
       chatIndex: currentChatIndex,
-      currentHistory: [...history]
+      currentHistory: [...history],
+      requestId: Date.now() + Math.random() // Unique identifier for this request
     };
     
     try {
@@ -44,16 +50,20 @@ function App() {
       setHistory(historyWithUserMessage);
       
       const chat = model.startChat({ history: requestChatContext.currentHistory });
-      const result = await chat.sendMessage(e.target[0].value);
+      const result = await chat.sendMessage(requestInput);
       const aiMessage = { role: "model", parts: [{ text: result.response.text() }] };
       
-      // Add AI response to history
-      const updatedHistory = [...historyWithUserMessage, aiMessage];
-      setHistory(updatedHistory);
-      setLoading(false); // Ensure loading stops when response is ready
+      // Check if we're still on the same chat before applying the response
+      // This prevents the bug where switching chats during AI response causes wrong chat to be updated
+      const isStillOnSameChat = 
+        requestChatContext.isExistingChat === onExistingChat && 
+        requestChatContext.chatIndex === currentChatIndex;
       
-      // If we're in an existing chat, update that chat in previousChats
+      const updatedHistory = [...historyWithUserMessage, aiMessage];
+      
+      // Always update the appropriate chat in previousChats based on the original context
       if (requestChatContext.isExistingChat && requestChatContext.chatIndex !== -1) {
+        // Update existing chat
         setPreviousChats((prev) => 
           prev.map((chat, index) => 
             index === requestChatContext.chatIndex 
@@ -61,36 +71,60 @@ function App() {
               : chat
           )
         );
+        
+        // Only update current history if we're still viewing the same chat
+        if (isStillOnSameChat) {
+          setHistory(updatedHistory);
+        }
       } else {
         // This is a new conversation, save it automatically
         const newChatIndex = previousChats.length;
         setPreviousChats((prev) => [...prev, { history: updatedHistory, title: "..." }]);
-        setOnExistingChat(true);
-        setCurrentChatIndex(newChatIndex);
+        
+        // Only update current chat state if we haven't switched away
+        if (isStillOnSameChat) {
+          setOnExistingChat(true);
+          setCurrentChatIndex(newChatIndex);
+          setHistory(updatedHistory);
+        }
         
         // Generate title asynchronously
         setTimeout(async () => {
-          const title = await createTitle(updatedHistory);
-          setPreviousChats((prev) =>
-            prev.map((chat, index) =>
-              index === newChatIndex ? { ...chat, title } : chat
-            )
-          );
+          try {
+            const title = await createTitle(updatedHistory);
+            setPreviousChats((prev) =>
+              prev.map((chat, index) =>
+                index === newChatIndex ? { ...chat, title } : chat
+              )
+            );
+          } catch (error) {
+            console.error("Error generating title:", error);
+          }
         }, 0);
       }
     } catch (error) {
       console.error("Error generating AI content:", error);
+      // If we're still on the same chat, remove the user message that was added
+      if (requestChatContext.isExistingChat === onExistingChat && 
+          requestChatContext.chatIndex === currentChatIndex) {
+        setHistory(requestChatContext.currentHistory);
+      }
     } finally {
-      setLoading(false); 
+      // Only clear loading if we're still on the same chat
+      if (requestChatContext.isExistingChat === onExistingChat && 
+          requestChatContext.chatIndex === currentChatIndex) {
+        setLoading(false);
+      }
     }
   };
 
   const loadChat = (chat, index) => {
+    // Clear any ongoing loading state when switching chats
+    setLoading(false);
     setHistory(chat.history);
     setInput("");
     setOnExistingChat(true);
     setCurrentChatIndex(index);
-    setLoading(false); // Ensure loading is stopped when switching chats
   };
 
   const toggleSidebar = () => {
@@ -110,12 +144,12 @@ function App() {
   
 
   const createChat = async () => {
-    // Simply start a new conversation
+    // Clear any ongoing loading state when creating a new chat
+    setLoading(false);
     setOnExistingChat(false);
     setCurrentChatIndex(-1);
     setHistory([]);
     setInput("");
-    setLoading(false); // Ensure loading is stopped when creating new chat
   };
 
   const deleteChat = (indexToDelete, e) => {
