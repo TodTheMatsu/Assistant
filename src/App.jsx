@@ -10,6 +10,7 @@ function App() {
   const [clientHistory, setClientHistory] = useState([]);
   const [previousChats, setPreviousChats] = useState([]);
   const [onExistingChat, setOnExistingChat] = useState(false);
+  const [currentChatIndex, setCurrentChatIndex] = useState(-1);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const resultsRef = useRef(null);
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
@@ -27,12 +28,49 @@ function App() {
   const fetchAIResponse = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setClientHistory((prevHistory) => [...prevHistory,   { role: "user", parts: [{ text: inputText }] },]);
+    const userMessage = { role: "user", parts: [{ text: inputText }] };
+    setClientHistory((prevHistory) => [...prevHistory, userMessage]);
+    
+    // Check if this is a new conversation before we modify anything
+    const isNewConversation = !onExistingChat && history.length === 0;
+    
     try {
       setInput("");
       const chat = model.startChat({ history: history });
       const result = await chat.sendMessage(e.target[0].value);
-      setClientHistory(history)
+      const aiMessage = { role: "model", parts: [{ text: result.response.text() }] };
+      
+      // Update both client history and main history
+      const updatedHistory = [...history, userMessage, aiMessage];
+      setHistory(updatedHistory);
+      setClientHistory((prevHistory) => [...prevHistory, aiMessage]);
+      
+      // If we're in an existing chat, update that chat in previousChats
+      if (onExistingChat && currentChatIndex !== -1) {
+        setPreviousChats((prev) => 
+          prev.map((chat, index) => 
+            index === currentChatIndex 
+              ? { ...chat, history: updatedHistory }
+              : chat
+          )
+        );
+      } else if (isNewConversation) {
+        // This is the first message in a new conversation, save it automatically
+        const newChatIndex = previousChats.length;
+        setPreviousChats((prev) => [...prev, { history: updatedHistory, title: "..." }]);
+        setOnExistingChat(true);
+        setCurrentChatIndex(newChatIndex);
+        
+        // Generate title asynchronously
+        setTimeout(async () => {
+          const title = await createTitle(updatedHistory);
+          setPreviousChats((prev) =>
+            prev.map((chat, index) =>
+              index === newChatIndex ? { ...chat, title } : chat
+            )
+          );
+        }, 0);
+      }
     } catch (error) {
       console.error("Error generating AI content:", error);
     } finally {
@@ -40,12 +78,12 @@ function App() {
     }
   };
 
-  const loadChat = (chat) => {
+  const loadChat = (chat, index) => {
     setClientHistory(chat.history);
     setHistory(chat.history);
     setInput("");
-    console.log(previousChats)
     setOnExistingChat(true);
+    setCurrentChatIndex(index);
   };
 
   const toggleSidebar = () => {
@@ -65,29 +103,12 @@ function App() {
   
 
   const createChat = async () => {
-    if (history.length === 0) {
-      return; 
-    }
-    if (onExistingChat === true) {
-      setOnExistingChat(false);
-      setHistory([]);
-      setClientHistory([]); 
-      setInput("");
-      return;
-    }
-    const updatedHistory = [...history];
-    setPreviousChats((prev) => [...prev, { history: updatedHistory, title: "..." }]); 
+    // Simply start a new conversation
+    setOnExistingChat(false);
+    setCurrentChatIndex(-1);
     setHistory([]);
     setClientHistory([]); 
     setInput("");
-    setTimeout(async () => {
-      const title = await createTitle(updatedHistory); 
-      setPreviousChats((prev) =>
-        prev.map((chat) =>
-          chat.history === updatedHistory ? { ...chat, title } : chat
-        )
-      );
-    }, 0); 
   };
   
   
@@ -160,7 +181,7 @@ function App() {
                 whileHover={{ scale: 1.02 }} 
                 whileTap={{ scale: 0.98 }}
                 className="w-full hover:bg-white  hover:bg-opacity-10 py-3 px-3 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
-                onClick={() => loadChat(chat)}
+                onClick={() => loadChat(chat, index)}
               >
                 <p className="text-sm truncate">{chat.title}</p>
               </motion.button>
