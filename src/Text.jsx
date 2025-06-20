@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useState } from 'react';
 
 function Text({ result, parts, role, loading }) {
   const delayTime = loading ? 0.5 : 0.2;
@@ -53,31 +54,108 @@ function Text({ result, parts, role, loading }) {
       </a>
     ),
 
-    code: ({ children }) => (
-      <code className=" text-white p-1 rounded">{children}</code>
-    ),
+    code: ({ children, className }) => {
+      const isInline = !className;
+      
+      if (isInline) {
+        return (
+          <code className="bg-white bg-opacity-15 text-blue-200 px-2 py-1 rounded-md font-mono text-sm border border-white border-opacity-10">
+            {children}
+          </code>
+        );
+      }
+      
+      return <code className={className}>{children}</code>;
+    },
 
     pre: ({ children }) => {
-      const copyToClipboard = () => {
-        const codeText = children.props.children
-        navigator.clipboard.writeText(codeText);
+      const [copied, setCopied] = useState(false);
+      
+      const copyToClipboard = async () => {
+        try {
+          const codeElement = children?.props?.children;
+          const codeText = typeof codeElement === 'string' ? codeElement : children?.props?.children?.toString() || '';
+          await navigator.clipboard.writeText(codeText);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+          console.error('Failed to copy code:', err);
+        }
       };
+
+      // Extract language from className if available
+      const className = children?.props?.className || '';
+      const language = className.replace('language-', '').toLowerCase();
+      const hasLanguage = language && language !== 'undefined';
     
       return (
-        <div className="relative">
-          <pre className="bg-gray-900 max-w-[100%] text-white text-sm p-4 rounded-lg overflow-auto">
-            {children}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="relative group my-4"
+        >
+          {/* Header with language label and copy button */}
+          <div className="flex items-center justify-between bg-gray-800 px-4 py-2 rounded-t-lg border-b border-gray-700">
+            <div className="flex items-center space-x-2">
+              <div className="flex space-x-1">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+              {hasLanguage && (
+                <span className="text-gray-400 text-xs font-mono uppercase tracking-wide">
+                  {language}
+                </span>
+              )}
+            </div>
+            
+            <motion.button
+              onClick={copyToClipboard}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center space-x-2 px-3 py-1 rounded-md bg-gray-700 hover:bg-gray-600 transition-colors duration-200 text-gray-300 hover:text-white"
+            >
+              {copied ? (
+                <>
+                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-xs font-medium text-green-400">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-xs font-medium">Copy</span>
+                </>
+              )}
+            </motion.button>
+          </div>
+          
+          {/* Code content */}
+          <pre className="bg-gray-900 text-gray-100 text-sm p-4 rounded-b-lg overflow-x-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500">
+            <code className="font-mono leading-relaxed">
+              {children}
+            </code>
           </pre>
-          <motion.button
-            onClick={copyToClipboard}
-            whileTap={{ scale: 0.9 }}
-            className="absolute top-2 right-2 bg-blue-900  text-white py-1 px-1 rounded-full  text-sm hover:bg-blue-600"
-          >
-            Copy
-          </motion.button>
-        </div>
+        </motion.div>
       );
     },
+
+    blockquote: ({ children }) => (
+      <motion.blockquote 
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+        className="border-l-4 border-blue-400 bg-white bg-opacity-10 backdrop-blur-sm pl-6 pr-4 py-3 my-4 rounded-r-lg shadow-lg"
+      >
+        <div className="text-white text-opacity-90 font-light italic text-lg leading-relaxed">
+          {children}
+        </div>
+      </motion.blockquote>
+    ),
     
   };
 
