@@ -110,6 +110,24 @@ function App() {
     setClientHistory([]); 
     setInput("");
   };
+
+  const deleteChat = (indexToDelete, e) => {
+    e.stopPropagation(); // Prevent triggering the loadChat function
+    
+    setPreviousChats((prev) => prev.filter((_, index) => index !== indexToDelete));
+    
+    // If we're currently viewing the chat being deleted, start a new chat
+    if (currentChatIndex === indexToDelete) {
+      setOnExistingChat(false);
+      setCurrentChatIndex(-1);
+      setHistory([]);
+      setClientHistory([]);
+      setInput("");
+    } else if (currentChatIndex > indexToDelete) {
+      // If we're viewing a chat that comes after the deleted one, adjust the index
+      setCurrentChatIndex(currentChatIndex - 1);
+    }
+  };
   
   
 
@@ -158,9 +176,9 @@ function App() {
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="bg-white border-r-2 border-white border-opacity-30 bg-opacity-10 h-full flex flex-col justify-start items-center overflow-hidden"
       >
-        <div className="w-full flex flex-col items-center pt-16 px-4">
+        <div className="w-full flex flex-col items-center pt-16 px-4 h-full">
           {/* Logo/Icon */}
-          <div className="mb-4">
+          <div className="mb-4 flex-shrink-0">
             <svg fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 stroke-white" viewBox="0 0 20 20">
               <motion.path 
                 initial={{ pathLength: 0, fill: "none" }} 
@@ -170,26 +188,50 @@ function App() {
             </svg>
           </div>
           
-          <h1 className="text-lg text-white font-thin mb-6 whitespace-nowrap">Chat History</h1>
+          <h1 className="text-lg text-white font-thin mb-6 whitespace-nowrap flex-shrink-0">Chat History</h1>
           
           {/* Chat History */}
-          <div className="w-full flex flex-col gap-2 flex-1 overflow-x-hidden overflow-y-auto">
+          <div className="w-full flex flex-col gap-2 flex-1 overflow-x-hidden overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30">
             {previousChats.map((chat, index) => (
-              <motion.button 
-                key={index} 
+              <motion.div 
+                key={index}
+                className="relative group flex-shrink-0"
                 initial={{ scale: 1 }} 
                 whileHover={{ scale: 1.02 }} 
                 whileTap={{ scale: 0.98 }}
-                className="w-full hover:bg-white  hover:bg-opacity-10 py-3 px-3 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
-                onClick={() => loadChat(chat, index)}
               >
-                <p className="text-sm truncate">{chat.title}</p>
-              </motion.button>
+                <button 
+                  className="w-full hover:bg-white hover:bg-opacity-10 py-3 px-3 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
+                  onClick={() => loadChat(chat, index)}
+                >
+                  <p className="text-sm truncate pr-8">{chat.title}</p>
+                </button>
+                
+                {/* Delete Button */}
+                <motion.button
+                  onClick={(e) => deleteChat(index, e)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:bg-opacity-20 p-1.5 rounded-md transition-all duration-200 flex items-center justify-center"
+                >
+                  <svg 
+                    className="w-4 h-4 text-red-400 hover:text-red-300" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                    />
+                  </svg>
+                </motion.button>
+              </motion.div>
             ))}
           </div>
           
           {/* New Chat Button */}
-          <div className="w-full mt-4 pb-4">
+          <div className="w-full mt-4 pb-4 flex-shrink-0">
             <motion.button 
               onClick={createChat} 
               initial={{ scale: 1 }} 
