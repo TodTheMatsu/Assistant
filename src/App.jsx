@@ -528,7 +528,7 @@ function App() {
                   htmlFor="search-toggle-bottom" 
                   className="text-sm text-white text-opacity-70 cursor-pointer select-none"
                 >
-                  Use Search (Gemini 2.0 Flash)
+                  Search The Web
                 </label>
               </div>
             </div>
