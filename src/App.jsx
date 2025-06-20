@@ -7,7 +7,6 @@ function App() {
   const [inputText, setInput] = useState(""); 
   const [loading, setLoading] = useState(false); 
   const [history, setHistory] = useState([]); 
-  const [clientHistory, setClientHistory] = useState([]);
   const [previousChats, setPreviousChats] = useState([]);
   const [onExistingChat, setOnExistingChat] = useState(false);
   const [currentChatIndex, setCurrentChatIndex] = useState(-1);
@@ -29,33 +28,41 @@ function App() {
     e.preventDefault();
     setLoading(true);
     const userMessage = { role: "user", parts: [{ text: inputText }] };
-    setClientHistory((prevHistory) => [...prevHistory, userMessage]);
     
-    // Check if this is a new conversation before we modify anything
-    const isNewConversation = !onExistingChat && history.length === 0;
+    // Capture the current chat context at the time of the request
+    const requestChatContext = {
+      isExistingChat: onExistingChat,
+      chatIndex: currentChatIndex,
+      currentHistory: [...history]
+    };
     
     try {
       setInput("");
-      const chat = model.startChat({ history: history });
+      
+      // Add user message to history immediately for display
+      const historyWithUserMessage = [...requestChatContext.currentHistory, userMessage];
+      setHistory(historyWithUserMessage);
+      
+      const chat = model.startChat({ history: requestChatContext.currentHistory });
       const result = await chat.sendMessage(e.target[0].value);
       const aiMessage = { role: "model", parts: [{ text: result.response.text() }] };
       
-      // Update both client history and main history
-      const updatedHistory = [...history, userMessage, aiMessage];
+      // Add AI response to history
+      const updatedHistory = [...historyWithUserMessage, aiMessage];
       setHistory(updatedHistory);
-      setClientHistory((prevHistory) => [...prevHistory, aiMessage]);
+      setLoading(false); // Ensure loading stops when response is ready
       
       // If we're in an existing chat, update that chat in previousChats
-      if (onExistingChat && currentChatIndex !== -1) {
+      if (requestChatContext.isExistingChat && requestChatContext.chatIndex !== -1) {
         setPreviousChats((prev) => 
           prev.map((chat, index) => 
-            index === currentChatIndex 
+            index === requestChatContext.chatIndex 
               ? { ...chat, history: updatedHistory }
               : chat
           )
         );
-      } else if (isNewConversation) {
-        // This is the first message in a new conversation, save it automatically
+      } else {
+        // This is a new conversation, save it automatically
         const newChatIndex = previousChats.length;
         setPreviousChats((prev) => [...prev, { history: updatedHistory, title: "..." }]);
         setOnExistingChat(true);
@@ -79,11 +86,11 @@ function App() {
   };
 
   const loadChat = (chat, index) => {
-    setClientHistory(chat.history);
     setHistory(chat.history);
     setInput("");
     setOnExistingChat(true);
     setCurrentChatIndex(index);
+    setLoading(false); // Ensure loading is stopped when switching chats
   };
 
   const toggleSidebar = () => {
@@ -107,8 +114,8 @@ function App() {
     setOnExistingChat(false);
     setCurrentChatIndex(-1);
     setHistory([]);
-    setClientHistory([]); 
     setInput("");
+    setLoading(false); // Ensure loading is stopped when creating new chat
   };
 
   const deleteChat = (indexToDelete, e) => {
@@ -121,7 +128,6 @@ function App() {
       setOnExistingChat(false);
       setCurrentChatIndex(-1);
       setHistory([]);
-      setClientHistory([]);
       setInput("");
     } else if (currentChatIndex > indexToDelete) {
       // If we're viewing a chat that comes after the deleted one, adjust the index
@@ -138,7 +144,7 @@ function App() {
         resultsRef.current.scrollTop = scrollHeight - clientHeight;
       }, 500); // Add a small delay to ensure the content is rendered
     }
-  }, [clientHistory]);
+  }, [history]);
   
 
   return (
@@ -284,10 +290,10 @@ function App() {
             ref={resultsRef}
             className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10 scrollbar
              scrollbar-thumb-gray-400 scrollbar-corner-white overflow-x-hidden scroll-smooth">
-            {clientHistory.map((entry, index) => (
+            {history.map((entry, index) => (
                 <Text key={index} result={entry.parts[0].text} role={entry.role} index={index} />
             ))}
-            {loading && <Text result="Thinking..." role='model' loading={loading}/>}
+            {loading && <Text key="loading" result="Thinking..." role='model' loading={true}/>}
           </motion.div>
   
           <form className="w-full flex justify-center items-center py-5" onSubmit={fetchAIResponse}>
