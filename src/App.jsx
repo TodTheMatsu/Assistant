@@ -211,16 +211,32 @@ function App() {
           }
         });
       } else {
-        // For non-image files, read content and add as text
+        // For non-image files, read content and add as text for AI processing
         try {
           const fileContent = await readFileContent(fileData.file);
           messageParts.push({
             text: `\n\n[File: ${fileData.name}]\n${fileContent}`
           });
+          // Also add file info for display in chat
+          messageParts.push({
+            fileInfo: {
+              name: fileData.name,
+              type: fileData.type,
+              size: fileData.size
+            }
+          });
         } catch (error) {
           console.error(`Error reading file ${fileData.name}:`, error);
           messageParts.push({
             text: `\n\n[File: ${fileData.name} - Error reading file content]`
+          });
+          // Still show file info even if content couldn't be read
+          messageParts.push({
+            fileInfo: {
+              name: fileData.name,
+              type: fileData.type || 'Unknown',
+              size: fileData.size
+            }
           });
         }
       }
@@ -876,7 +892,7 @@ function App() {
             ) : (
               <>
                 {history.map((entry, index) => (
-                    <Text key={index} result={entry.parts[0].text} role={entry.role} index={index} />
+                    <Text key={index} parts={entry.parts} role={entry.role} index={index} />
                 ))}
                 {loading && <Text key="loading" result="Thinking..." role='model' loading={true}/>}
               </>
