@@ -11,10 +11,15 @@ function App() {
   const [onExistingChat, setOnExistingChat] = useState(false);
   const [currentChatIndex, setCurrentChatIndex] = useState(-1);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [useSearch, setUseSearch] = useState(false);
   const resultsRef = useRef(null);
   const inputRef = useRef(null);
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
+  const searchModel = genAI.getGenerativeModel({ 
+    model: "gemini-2.0-flash-exp",
+    tools: [{ googleSearch: {} }]
+  });
   const handleChange = (e) => {
     setInput(e.target.value);
   };
@@ -52,7 +57,9 @@ function App() {
       const historyWithUserMessage = [...requestChatContext.currentHistory, userMessage];
       setHistory(historyWithUserMessage);
       
-      const chat = model.startChat({ history: requestChatContext.currentHistory });
+      // Use search model if useSearch is enabled, otherwise use regular model
+      const selectedModel = useSearch ? searchModel : model;
+      const chat = selectedModel.startChat({ history: requestChatContext.currentHistory });
       const result = await chat.sendMessage(requestInput);
       const aiMessage = { role: "model", parts: [{ text: result.response.text() }] };
       
@@ -431,27 +438,53 @@ function App() {
                 </motion.div>
                 
                 {/* Input field integrated into welcome screen */}
-                <motion.form
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.8 }}
-                  className="w-full flex justify-center items-center"
-                  onSubmit={fetchAIResponse}
+                  className="w-full flex flex-col justify-center items-center space-y-4"
                 >
-                  <motion.input
-                    ref={inputRef}
-                    type="text"
-                    value={inputText}
-                    onChange={handleChange}
-                    placeholder="Enter text"
-                    initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
-                    transition={{ duration: 0.2, ease: "linear" }}
-                    whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
-                    whileHover={{ width: "70%" }}
-                    className="bg-white bg-opacity-20 text-left text-xl px-5
-                     text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
-                  />
-                </motion.form>
+                  <form
+                    className="w-full flex justify-center items-center"
+                    onSubmit={fetchAIResponse}
+                  >
+                    <motion.input
+                      ref={inputRef}
+                      type="text"
+                      value={inputText}
+                      onChange={handleChange}
+                      placeholder="Enter text"
+                      initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
+                      transition={{ duration: 0.2, ease: "linear" }}
+                      whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
+                      whileHover={{ width: "70%" }}
+                      className="bg-white bg-opacity-20 text-left text-xl px-5
+                       text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
+                    />
+                  </form>
+                  
+                  {/* Search toggle */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 1 }}
+                    className="flex items-center space-x-2"
+                  >
+                    <input
+                      type="checkbox"
+                      id="search-toggle"
+                      checked={useSearch}
+                      onChange={(e) => setUseSearch(e.target.checked)}
+                      className="w-4 h-4 text-blue-500 bg-white bg-opacity-20 border-2 border-white border-opacity-30 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <label 
+                      htmlFor="search-toggle" 
+                      className="text-sm text-white text-opacity-70 cursor-pointer select-none"
+                    >
+                      Search The Web
+                    </label>
+                  </motion.div>
+                </motion.div>
               </motion.div>
             ) : (
               <>
@@ -465,21 +498,40 @@ function App() {
   
           {/* Only show bottom input when there are messages or loading */}
           {(history.length > 0 || loading) && (
-            <form className="w-full flex justify-center items-center py-5" onSubmit={fetchAIResponse}>
-              <motion.input
-                ref={inputRef}
-                type="text"
-                value={inputText}
-                onChange={handleChange}
-                placeholder="Enter text"
-                initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
-                transition={{ duration: 0.2, ease: "linear" }}
-                whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
-                whileHover={{ width: "70%" }}
-                className="bg-white bg-opacity-20 text-left text-xl px-5
-                 text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
-              />
-            </form>
+            <div className="w-full flex flex-col justify-center items-center py-5 space-y-3">
+              <form className="w-full flex justify-center" onSubmit={fetchAIResponse}>
+                <motion.input
+                  ref={inputRef}
+                  type="text"
+                  value={inputText}
+                  onChange={handleChange}
+                  placeholder="Enter text"
+                  initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
+                  transition={{ duration: 0.2, ease: "linear" }}
+                  whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
+                  whileHover={{ width: "70%" }}
+                  className="bg-white bg-opacity-20 text-left text-xl px-5
+                   text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
+                />
+              </form>
+              
+              {/* Search toggle */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="search-toggle-bottom"
+                  checked={useSearch}
+                  onChange={(e) => setUseSearch(e.target.checked)}
+                  className="w-4 h-4 text-blue-500 bg-white bg-opacity-20 border-2 border-white border-opacity-30 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label 
+                  htmlFor="search-toggle-bottom" 
+                  className="text-sm text-white text-opacity-70 cursor-pointer select-none"
+                >
+                  Use Search (Gemini 2.0 Flash)
+                </label>
+              </div>
+            </div>
           )}
         </motion.div>
       </div>
