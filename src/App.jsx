@@ -12,6 +12,7 @@ function App() {
   const [currentChatIndex, setCurrentChatIndex] = useState(-1);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const resultsRef = useRef(null);
+  const inputRef = useRef(null);
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
   const handleChange = (e) => {
@@ -188,6 +189,15 @@ function App() {
       }, 500); // Add a small delay to ensure the content is rendered
     }
   }, [history]);
+
+  // Effect to refocus input after first message is sent
+  useEffect(() => {
+    if (history.length > 0 && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 100); // Small delay to ensure the input field is rendered
+    }
+  }, [history.length]);
   
 
   return (
@@ -336,26 +346,86 @@ function App() {
             ref={resultsRef}
             className="w-full h-full flex flex-col justify-start items-start rounded-xl overflow-auto space-y-5 px-10 py-10 scrollbar
              scrollbar-thumb-gray-400 scrollbar-corner-white overflow-x-hidden scroll-smooth">
-            {history.map((entry, index) => (
-                <Text key={index} result={entry.parts[0].text} role={entry.role} index={index} />
-            ))}
-            {loading && <Text key="loading" result="Thinking..." role='model' loading={true}/>}
+            {history.length === 0 && !loading ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="w-full h-full flex flex-col justify-center items-center text-center"
+              >
+                <motion.h1 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1, delay: 0.2 }}
+                  className="text-6xl md:text-8xl font-thin text-white mb-8"
+                >
+                  Assistant
+                </motion.h1>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.5 }}
+                  className="space-y-3 mb-12"
+                >
+                  <p className="text-xl text-white text-opacity-70 font-light">
+                    Start a conversation by typing your message below
+                  </p>
+                  <p className="text-lg text-white text-opacity-50 font-light">
+                    Ask anything, and I'll help you find the answers
+                  </p>
+                </motion.div>
+                
+                {/* Input field integrated into welcome screen */}
+                <motion.form
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.8 }}
+                  className="w-full flex justify-center items-center"
+                  onSubmit={fetchAIResponse}
+                >
+                  <motion.input
+                    ref={inputRef}
+                    type="text"
+                    value={inputText}
+                    onChange={handleChange}
+                    placeholder="Enter text"
+                    initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
+                    transition={{ duration: 0.2, ease: "linear" }}
+                    whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
+                    whileHover={{ width: "70%" }}
+                    className="bg-white bg-opacity-20 text-left text-xl px-5
+                     text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
+                  />
+                </motion.form>
+              </motion.div>
+            ) : (
+              <>
+                {history.map((entry, index) => (
+                    <Text key={index} result={entry.parts[0].text} role={entry.role} index={index} />
+                ))}
+                {loading && <Text key="loading" result="Thinking..." role='model' loading={true}/>}
+              </>
+            )}
           </motion.div>
   
-          <form className="w-full flex justify-center items-center py-5" onSubmit={fetchAIResponse}>
-            <motion.input
-              type="text"
-              value={inputText}
-              onChange={handleChange}
-              placeholder="Enter text"
-              initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
-              transition={{ duration: 0.2, ease: "linear" }}
-              whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
-              whileHover={{ width: "70%" }}
-              className="bg-white bg-opacity-20 text-left text-xl px-5
-               text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
-            />
-          </form>
+          {/* Only show bottom input when there are messages or loading */}
+          {(history.length > 0 || loading) && (
+            <form className="w-full flex justify-center items-center py-5" onSubmit={fetchAIResponse}>
+              <motion.input
+                ref={inputRef}
+                type="text"
+                value={inputText}
+                onChange={handleChange}
+                placeholder="Enter text"
+                initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
+                transition={{ duration: 0.2, ease: "linear" }}
+                whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
+                whileHover={{ width: "70%" }}
+                className="bg-white bg-opacity-20 text-left text-xl px-5
+                 text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
+              />
+            </form>
+          )}
         </motion.div>
       </div>
       </div>
