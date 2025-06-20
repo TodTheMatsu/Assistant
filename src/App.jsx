@@ -13,7 +13,7 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const resultsRef = useRef(null);
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
   const handleChange = (e) => {
     setInput(e.target.value);
   };
@@ -152,14 +152,14 @@ function App() {
           <h1 className="text-lg text-white font-thin mb-6 whitespace-nowrap">Chat History</h1>
           
           {/* Chat History */}
-          <div className="w-full flex flex-col gap-2 flex-1 overflow-y-auto">
+          <div className="w-full flex flex-col gap-2 flex-1 overflow-x-hidden overflow-y-auto">
             {previousChats.map((chat, index) => (
               <motion.button 
                 key={index} 
                 initial={{ scale: 1 }} 
                 whileHover={{ scale: 1.02 }} 
                 whileTap={{ scale: 0.98 }}
-                className="w-full hover:bg-white hover:bg-opacity-10 py-3 px-3 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
+                className="w-full hover:bg-white  hover:bg-opacity-10 py-3 px-3 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
                 onClick={() => loadChat(chat)}
               >
                 <p className="text-sm truncate">{chat.title}</p>
@@ -183,8 +183,6 @@ function App() {
       </motion.div>
       {/* Main Content */}
       <div className="flex-1 h-full flex flex-col justify-start items-center">
-        <motion.div variants={blurDecorator} initial="initial" animate="animate" className="w-[10%] h-[20%] right-0 bg-opacity-20 rounded-full bg-white fixed blur-3xl"/>
-        <motion.div variants={blurDecorator} initial="initial" animate="animate" className="w-[10%] h-[20%] left-0 bottom-0 bg-opacity-20 rounded-full bg-white fixed blur-3xl"/>
         <motion.div 
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1, transition: { duration: 0.5, delay: 0.2 } }} 
