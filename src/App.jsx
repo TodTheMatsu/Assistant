@@ -188,10 +188,23 @@ function App() {
             </svg>
           </div>
           
+          {/* New Chat Button */}
+          <div className="w-full mb-6 flex-shrink-0">
+            <motion.button 
+              onClick={createChat} 
+              initial={{ scale: 1 }} 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full text-white py-3 px-4 hover:bg-opacity-20 rounded-xl bg-white bg-opacity-10 border border-white border-opacity-20 transition-all duration-200"
+            >
+              <span className="text-sm font-medium">+ New Chat</span>
+            </motion.button>
+          </div>
+          
           <h1 className="text-lg text-white font-thin mb-6 whitespace-nowrap flex-shrink-0">Chat History</h1>
           
           {/* Chat History */}
-          <div className="w-full flex flex-col gap-2 flex-1 overflow-x-hidden overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30">
+          <div className="w-full flex flex-col gap-2 flex-1 overflow-x-hidden overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30 pr-1">
             {previousChats.map((chat, index) => (
               <motion.div 
                 key={index}
@@ -201,10 +214,10 @@ function App() {
                 whileTap={{ scale: 0.98 }}
               >
                 <button 
-                  className="w-full hover:bg-white hover:bg-opacity-10 py-3 px-3 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
+                  className="w-full hover:bg-white hover:bg-opacity-10 py-3 px-3 pr-10 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
                   onClick={() => loadChat(chat, index)}
                 >
-                  <p className="text-sm truncate pr-8">{chat.title}</p>
+                  <p className="text-sm truncate">{chat.title}</p>
                 </button>
                 
                 {/* Delete Button */}
@@ -230,17 +243,33 @@ function App() {
             ))}
           </div>
           
-          {/* New Chat Button */}
-          <div className="w-full mt-4 pb-4 flex-shrink-0">
-            <motion.button 
-              onClick={createChat} 
-              initial={{ scale: 1 }} 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full text-white py-3 px-4 hover:bg-opacity-20 rounded-xl bg-white bg-opacity-10 border border-white border-opacity-20 transition-all duration-200"
-            >
-              <span className="text-sm font-medium">+ New Chat</span>
-            </motion.button>
+          {/* User Account Section */}
+          <div className="w-full mt-4 mb-4 flex-shrink-0">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white bg-opacity-5 border border-white border-opacity-10">
+              {/* User Avatar Placeholder */}
+              <div className="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+              </div>
+              
+              {/* User Info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">User</p>
+                <p className="text-xs text-white text-opacity-60 truncate">user@example.com</p>
+              </div>
+              
+              {/* Settings/Options Button */}
+              <motion.button 
+                className="p-1 rounded-md hover:bg-white hover:bg-opacity-10 transition-colors duration-200 flex-shrink-0"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <svg className="w-4 h-4 text-white text-opacity-60 hover:text-opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.div>
