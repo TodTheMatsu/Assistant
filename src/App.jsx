@@ -449,70 +449,110 @@ function App() {
                     onSubmit={fetchAIResponse}
                   >
                     <div className="relative w-full max-w-2xl">
-                      <motion.input
-                        ref={inputRef}
-                        type="text"
-                        value={inputText}
-                        onChange={handleChange}
-                        placeholder="Enter text"
-                        initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
-                        transition={{ duration: 0.2, ease: "linear" }}
-                        whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)" }}
-                        className="w-full bg-white bg-opacity-20 text-left text-xl px-6 pr-40
-                         text-white h-16 rounded-2xl focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-lg placeholder:text-white placeholder:text-opacity-50"
-                      />
-                      
-                      {/* Search toggle button inside input */}
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <input
-                          type="checkbox"
-                          id="search-toggle"
-                          checked={useSearch}
-                          onChange={(e) => setUseSearch(e.target.checked)}
-                          className="sr-only"
+                      <div className="bg-white bg-opacity-20 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:shadow-2xl focus-within:shadow-blue-500/20 transition-all duration-300">
+                        <motion.input
+                          ref={inputRef}
+                          type="text"
+                          value={inputText}
+                          onChange={handleChange}
+                          placeholder="Enter text"
+                          initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
+                          transition={{ duration: 0.2, ease: "linear" }}
+                          className="w-full bg-transparent text-left text-xl px-6 py-4
+                           text-white rounded-t-2xl focus:outline-none placeholder:text-lg placeholder:text-white placeholder:text-opacity-50"
                         />
-                        <motion.label 
-                          htmlFor="search-toggle" 
-                          className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden ${
-                            useSearch 
-                              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50' 
-                              : 'bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50'
-                          }`}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          style={{ isolation: 'isolate' }}
-                        >
-                          {/* Icon */}
-                          <motion.div
-                            className={`relative z-10 ${useSearch ? 'text-white' : 'text-white/70'}`}
-                            animate={{ rotate: useSearch ? 360 : 0 }}
-                            transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                          </motion.div>
-                          
-                          {/* Text - hidden on smaller screens */}
-                          <span className="relative z-10 text-sm font-medium hidden sm:block">
-                            Search Web
-                          </span>
-                          
-                          {/* Active indicator */}
-                          {useSearch && (
-                            <motion.div
-                              initial={{ scale: 0, rotate: 180 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              exit={{ scale: 0, rotate: -180 }}
-                              transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
-                              className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30"
+                        
+                        {/* Bottom section with buttons */}
+                        <div className="flex items-center justify-between px-6 py-3 border-t border-white/10">
+                          {/* Search toggle button */}
+                          <div>
+                            <input
+                              type="checkbox"
+                              id="search-toggle"
+                              checked={useSearch}
+                              onChange={(e) => setUseSearch(e.target.checked)}
+                              className="sr-only"
+                            />
+                            <motion.label 
+                              htmlFor="search-toggle" 
+                              className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden ${
+                                useSearch 
+                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50' 
+                                  : 'bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50'
+                              }`}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              style={{ isolation: 'isolate' }}
                             >
-                              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </motion.div>
-                          )}
-                        </motion.label>
+                              {/* Icon */}
+                              <motion.div
+                                className={`relative z-10 ${useSearch ? 'text-white' : 'text-white/70'}`}
+                                animate={{ rotate: useSearch ? 360 : 0 }}
+                                transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                              </motion.div>
+                              
+                              {/* Text */}
+                              <span className="relative z-10 text-sm font-medium">
+                                Search The Web
+                              </span>
+                              
+                              {/* Active indicator */}
+                              {useSearch && (
+                                <motion.div
+                                  initial={{ scale: 0, rotate: 180 }}
+                                  animate={{ scale: 1, rotate: 0 }}
+                                  exit={{ scale: 0, rotate: -180 }}
+                                  transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
+                                  className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30"
+                                >
+                                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </motion.div>
+                              )}
+                            </motion.label>
+                          </div>
+                          
+                          {/* Send button */}
+                          <motion.button
+                            type="submit"
+                            disabled={loading || !inputText.trim()}
+                            className={`relative flex items-center justify-center px-6 py-2 rounded-xl transition-all duration-300 backdrop-blur-sm overflow-hidden ${
+                              loading || !inputText.trim()
+                                ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                                : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50 hover:shadow-xl hover:shadow-blue-500/40'
+                            }`}
+                            whileHover={loading || !inputText.trim() ? {} : { scale: 1.05 }}
+                            whileTap={loading || !inputText.trim() ? {} : { scale: 0.95 }}
+                            style={{ isolation: 'isolate' }}
+                          >
+                            {loading ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                  className="w-4 h-4 mr-2"
+                                >
+                                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                  </svg>
+                                </motion.div>
+                                <span className="text-sm font-medium">Sending...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                                <span className="text-sm font-medium">Send</span>
+                              </>
+                            )}
+                          </motion.button>
+                        </div>
                       </div>
                     </div>
                   </form>
@@ -533,70 +573,110 @@ function App() {
             <div className="w-full flex flex-col justify-center items-center py-5">
               <form className="w-full flex justify-center" onSubmit={fetchAIResponse}>
                 <div className="relative w-full max-w-2xl">
-                  <motion.input
-                    ref={inputRef}
-                    type="text"
-                    value={inputText}
-                    onChange={handleChange}
-                    placeholder="Enter text"
-                    initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
-                    transition={{ duration: 0.2, ease: "linear" }}
-                    whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)" }}
-                    className="w-full bg-white bg-opacity-20 text-left text-xl px-6 pr-40
-                     text-white h-16 rounded-2xl focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-lg placeholder:text-white placeholder:text-opacity-50"
-                  />
-                  
-                  {/* Search toggle button inside input */}
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <input
-                      type="checkbox"
-                      id="search-toggle-bottom"
-                      checked={useSearch}
-                      onChange={(e) => setUseSearch(e.target.checked)}
-                      className="sr-only"
+                  <div className="bg-white bg-opacity-20 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:shadow-2xl focus-within:shadow-blue-500/20 transition-all duration-300">
+                    <motion.input
+                      ref={inputRef}
+                      type="text"
+                      value={inputText}
+                      onChange={handleChange}
+                      placeholder="Enter text"
+                      initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
+                      transition={{ duration: 0.2, ease: "linear" }}
+                      className="w-full bg-transparent text-left text-xl px-6 py-4
+                       text-white rounded-t-2xl focus:outline-none placeholder:text-lg placeholder:text-white placeholder:text-opacity-50"
                     />
-                    <motion.label 
-                      htmlFor="search-toggle-bottom" 
-                      className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden ${
-                        useSearch 
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50' 
-                          : 'bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50'
-                      }`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      style={{ isolation: 'isolate' }}
-                    >
-                      {/* Icon */}
-                      <motion.div
-                        className={`relative z-10 ${useSearch ? 'text-white' : 'text-white/70'}`}
-                        animate={{ rotate: useSearch ? 360 : 0 }}
-                        transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                      </motion.div>
-                      
-                      {/* Text - hidden on smaller screens */}
-                      <span className="relative z-10 text-sm font-medium hidden sm:block">
-                        Search Web
-                      </span>
-                      
-                      {/* Active indicator */}
-                      {useSearch && (
-                        <motion.div
-                          initial={{ scale: 0, rotate: 180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          exit={{ scale: 0, rotate: -180 }}
-                          transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
-                          className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30"
+                    
+                    {/* Bottom section with buttons */}
+                    <div className="flex items-center justify-between px-6 py-3 border-t border-white/10">
+                      {/* Search toggle button */}
+                      <div>
+                        <input
+                          type="checkbox"
+                          id="search-toggle-bottom"
+                          checked={useSearch}
+                          onChange={(e) => setUseSearch(e.target.checked)}
+                          className="sr-only"
+                        />
+                        <motion.label 
+                          htmlFor="search-toggle-bottom" 
+                          className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden ${
+                            useSearch 
+                              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50' 
+                              : 'bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50'
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          style={{ isolation: 'isolate' }}
                         >
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </motion.div>
-                      )}
-                    </motion.label>
+                          {/* Icon */}
+                          <motion.div
+                            className={`relative z-10 ${useSearch ? 'text-white' : 'text-white/70'}`}
+                            animate={{ rotate: useSearch ? 360 : 0 }}
+                            transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </motion.div>
+                          
+                          {/* Text */}
+                          <span className="relative z-10 text-sm font-medium">
+                            Search The Web
+                          </span>
+                          
+                          {/* Active indicator */}
+                          {useSearch && (
+                            <motion.div
+                              initial={{ scale: 0, rotate: 180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              exit={{ scale: 0, rotate: -180 }}
+                              transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
+                              className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30"
+                            >
+                              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </motion.div>
+                          )}
+                        </motion.label>
+                      </div>
+                      
+                      {/* Send button */}
+                      <motion.button
+                        type="submit"
+                        disabled={loading || !inputText.trim()}
+                        className={`relative flex items-center justify-center px-6 py-2 rounded-xl transition-all duration-300 backdrop-blur-sm overflow-hidden ${
+                          loading || !inputText.trim()
+                            ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                            : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50 hover:shadow-xl hover:shadow-blue-500/40'
+                        }`}
+                        whileHover={loading || !inputText.trim() ? {} : { scale: 1.05 }}
+                        whileTap={loading || !inputText.trim() ? {} : { scale: 0.95 }}
+                        style={{ isolation: 'isolate' }}
+                      >
+                        {loading ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="w-4 h-4 mr-2"
+                            >
+                              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                            </motion.div>
+                            <span className="text-sm font-medium">Sending...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                            <span className="text-sm font-medium">Send</span>
+                          </>
+                        )}
+                      </motion.button>
+                    </div>
                   </div>
                 </div>
               </form>
