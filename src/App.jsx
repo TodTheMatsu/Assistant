@@ -340,7 +340,20 @@ function App() {
 
   const createTitle = async (chatHistory) => {
     try {
-      const prompt = "Generate a short title for the following chat history, you will only give one title and nothing else: " + JSON.stringify(chatHistory);
+      // Extract only text content from chat history, ignoring images and other data
+      const textOnlyHistory = chatHistory.map(entry => ({
+        role: entry.role,
+        parts: entry.parts
+          .filter(part => part.text) // Only include parts that have text
+          .map(part => ({ text: part.text })) // Only keep the text property
+      })).filter(entry => entry.parts.length > 0); // Remove entries with no text content
+      
+      // If no text content found, create a generic title
+      if (textOnlyHistory.length === 0) {
+        return "New Chat";
+      }
+      
+      const prompt = "Generate a short title for the following chat history, you will only give one title and nothing else: " + JSON.stringify(textOnlyHistory);
       const result = await model.generateContent(prompt);
       return result.response.text();
     } catch (error) {
