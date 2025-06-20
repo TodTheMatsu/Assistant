@@ -12,15 +12,85 @@ function App() {
   const [currentChatIndex, setCurrentChatIndex] = useState(-1);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [useSearch, setUseSearch] = useState(false);
+  const [useFlowchart, setUseFlowchart] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const resultsRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
+  
+  // Function definitions for AI function calling
+  const flowchartFunction = {
+    name: "createFlowchart",
+    description: "Creates a flowchart diagram from the provided nodes and connections. Use this when the user asks for a flowchart, process diagram, workflow, or visual representation of steps.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "Title of the flowchart"
+        },
+        description: {
+          type: "string",
+          description: "Brief description of what the flowchart represents"
+        },
+        nodes: {
+          type: "array",
+          description: "Array of nodes in the flowchart",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string", description: "Unique identifier for the node" },
+              type: { 
+                type: "string", 
+                enum: ["start", "end", "process", "decision", "data"],
+                description: "Type of node: start (oval), end (oval), process (rectangle), decision (diamond), data (parallelogram)"
+              },
+              position: {
+                type: "object",
+                properties: {
+                  x: { type: "number", description: "X coordinate" },
+                  y: { type: "number", description: "Y coordinate" }
+                }
+              },
+              data: {
+                type: "object",
+                properties: {
+                  label: { type: "string", description: "Text label for the node" }
+                }
+              }
+            },
+            required: ["id", "type", "position", "data"]
+          }
+        },
+        edges: {
+          type: "array",
+          description: "Array of connections between nodes",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string", description: "Unique identifier for the edge" },
+              source: { type: "string", description: "ID of source node" },
+              target: { type: "string", description: "ID of target node" },
+              label: { type: "string", description: "Optional label for the edge" },
+              animated: { type: "boolean", description: "Whether edge should be animated" }
+            },
+            required: ["id", "source", "target"]
+          }
+        }
+      },
+      required: ["title", "nodes", "edges"]
+    }
+  };
+
   const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
   const searchModel = genAI.getGenerativeModel({ 
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash",
     tools: [{ googleSearch: {} }]
+  });
+  const flowchartModel = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    tools: [{ functionDeclarations: [flowchartFunction] }]
   });
   const handleChange = (e) => {
     setInput(e.target.value);
@@ -204,6 +274,16 @@ function App() {
     exit: { opacity: 0 },
   };
 
+  // Helper function to clean chat history for AI models (remove flowchart data)
+  const cleanHistoryForAI = (history) => {
+    return history.map(entry => ({
+      role: entry.role,
+      parts: entry.parts.filter(part => 
+        part.text || part.inlineData // Keep text and images, exclude flowchart data
+      )
+    })).filter(entry => entry.parts.length > 0); // Remove entries with no valid parts
+  };
+
   const fetchAIResponse = async (e) => {
     e.preventDefault();
     
@@ -295,11 +375,76 @@ function App() {
       const historyWithUserMessage = [...requestChatContext.currentHistory, userMessage];
       setHistory(historyWithUserMessage);
       
-      // Use search model if useSearch is enabled, otherwise use regular model
-      const selectedModel = useSearch ? searchModel : model;
-      const chat = selectedModel.startChat({ history: requestChatContext.currentHistory });
+      // Check if the request is asking for a flowchart or if flowchart mode is enabled
+      const textContent = messageParts.find(part => part.text)?.text || '';
+      const isFlowchartRequest = useFlowchart || /\b(flowchart|flow chart|diagram|workflow|process flow|visual|chart|process)\b/i.test(textContent);
+      
+      console.log('Model selection debug:', {
+        textContent,
+        useFlowchart,
+        useSearch,
+        isFlowchartRequest,
+        historyLength: requestChatContext.currentHistory.length
+      });
+      
+      let selectedModel;
+      if (isFlowchartRequest) {
+        selectedModel = flowchartModel;
+        console.log('Using flowchart model');
+      } else if (useSearch) {
+        selectedModel = searchModel;
+        console.log('Using search model');
+      } else {
+        selectedModel = model;
+        console.log('Using regular model');
+      }
+      
+      const chat = selectedModel.startChat({ 
+        history: cleanHistoryForAI(requestChatContext.currentHistory) 
+      });
       const result = await chat.sendMessage(messageParts);
-      const aiMessage = { role: "model", parts: [{ text: result.response.text() }] };
+      
+      // Debug logging
+      console.log('AI Response:', result.response);
+      console.log('Function Calls available:', typeof result.response.functionCalls);
+      
+      let aiMessage;
+      
+      // Handle function calls (for flowcharts)
+      try {
+        const functionCalls = result.response.functionCalls();
+        console.log('Function Calls:', functionCalls);
+        
+        if (functionCalls && functionCalls.length > 0) {
+          console.log('Processing function call:', functionCalls[0]);
+          const functionCall = functionCalls[0];
+          
+          if (functionCall.name === 'createFlowchart') {
+            const flowchartData = functionCall.args;
+            console.log('Flowchart data:', flowchartData);
+            
+            // Create AI message with flowchart
+            aiMessage = {
+              role: "model",
+              parts: [
+                { text: `I've created a flowchart for you: "${flowchartData.title}"` },
+                { flowchart: flowchartData }
+              ]
+            };
+          } else {
+            // Handle other function calls if any
+            aiMessage = { role: "model", parts: [{ text: "Function call completed." }] };
+          }
+        } else {
+          console.log('No function calls, using regular text response');
+          // Regular text response
+          aiMessage = { role: "model", parts: [{ text: result.response.text() }] };
+        }
+      } catch (error) {
+        console.log('Error handling function calls:', error);
+        // Fallback to regular text response
+        aiMessage = { role: "model", parts: [{ text: result.response.text() }] };
+      }
       
       // Check if we're still on the same chat before applying the response
       // This prevents the bug where switching chats during AI response causes wrong chat to be updated
@@ -565,7 +710,7 @@ function App() {
           </div>
           
           {/* New Chat Button */}
-          <div className="w-full mb-6 flex-shrink-0">
+          <div className="w-full mb-4 flex-shrink-0">
             <motion.button 
               onClick={createChat} 
               initial={{ scale: 1 }} 
@@ -901,6 +1046,59 @@ function App() {
                                 )}
                               </motion.label>
                             </div>
+                            
+                            {/* Flowchart toggle */}
+                            <div>
+                              <input
+                                type="checkbox"
+                                id="flowchart-toggle"
+                                checked={useFlowchart}
+                                onChange={(e) => setUseFlowchart(e.target.checked)}
+                                className="sr-only"
+                              />
+                              <motion.label 
+                                htmlFor="flowchart-toggle" 
+                                className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden ${
+                                  useFlowchart 
+                                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 border border-purple-400/50' 
+                                    : 'bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50'
+                                }`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                style={{ isolation: 'isolate' }}
+                              >
+                                {/* Icon */}
+                                <motion.div
+                                  className={`relative z-10 ${useFlowchart ? 'text-white' : 'text-white/70'}`}
+                                  animate={{ rotate: useFlowchart ? 360 : 0 }}
+                                  transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m0 0h2m-2 0v4a2 2 0 002 2h2a2 2 0 002-2v-4m0 0h2a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012 2v2a2 2 0 01-2 2H7m2-4h2m0 0V5a2 2 0 012-2h2" />
+                                  </svg>
+                                </motion.div>
+                                
+                                {/* Text */}
+                                <span className="relative z-10 text-sm font-medium">
+                                  Flowchart Mode
+                                </span>
+                                
+                                {/* Active indicator */}
+                                {useFlowchart && (
+                                  <motion.div
+                                    initial={{ scale: 0, rotate: 180 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    exit={{ scale: 0, rotate: -180 }}
+                                    transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
+                                    className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30"
+                                  >
+                                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </motion.div>
+                                )}
+                              </motion.label>
+                            </div>
                           </div>
                           
                           {/* Send button */}
@@ -1089,6 +1287,59 @@ function App() {
                             
                             {/* Active indicator */}
                             {useSearch && (
+                              <motion.div
+                                initial={{ scale: 0, rotate: 180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                exit={{ scale: 0, rotate: -180 }}
+                                transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
+                                className="relative z-10 w-4 h-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30"
+                              >
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </motion.div>
+                            )}
+                          </motion.label>
+                        </div>
+                        
+                        {/* Flowchart toggle button */}
+                        <div>
+                          <input
+                            type="checkbox"
+                            id="flowchart-toggle-bottom"
+                            checked={useFlowchart}
+                            onChange={(e) => setUseFlowchart(e.target.checked)}
+                            className="sr-only"
+                          />
+                          <motion.label 
+                            htmlFor="flowchart-toggle-bottom" 
+                            className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden ${
+                              useFlowchart 
+                                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30 border border-purple-400/50' 
+                                : 'bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50'
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            style={{ isolation: 'isolate' }}
+                          >
+                            {/* Icon */}
+                            <motion.div
+                              className={`relative z-10 ${useFlowchart ? 'text-white' : 'text-white/70'}`}
+                              animate={{ rotate: useFlowchart ? 360 : 0 }}
+                              transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m0 0h2m-2 0v4a2 2 0 002 2h2a2 2 0 002-2v-4m0 0h2a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012 2v2a2 2 0 01-2 2H7m2-4h2m0 0V5a2 2 0 012-2h2" />
+                              </svg>
+                            </motion.div>
+                            
+                            {/* Text */}
+                            <span className="relative z-10 text-sm font-medium">
+                              Flowchart Mode
+                            </span>
+                            
+                            {/* Active indicator */}
+                            {useFlowchart && (
                               <motion.div
                                 initial={{ scale: 0, rotate: 180 }}
                                 animate={{ scale: 1, rotate: 0 }}
