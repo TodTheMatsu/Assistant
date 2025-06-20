@@ -182,12 +182,11 @@ function App() {
         </div>
       </motion.div>
       {/* Main Content */}
-      <div className="flex-1 h-full flex flex-col justify-start items-center">
+      <div className="flex-1 h-full flex flex-col justify-start items-center bg-white bg-opacity-5 backdrop-blur-3xl shadow-[inset_0px_30px_600px_rgba(255,255,255,.01)]">
         <motion.div 
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1, transition: { duration: 0.5, delay: 0.2 } }} 
-          className="bg-white bg-opacity-5 z-10 backdrop-blur-3xl flex-grow w-full h-full flex flex-col justify-start items-center 
-          shadow-[inset_0px_30px_600px_rgba(255,255,255,.01)]"
+          className="z-10 flex-grow w-full max-w-4xl h-full flex flex-col justify-start items-center"
         >
           <motion.div
             ref={resultsRef}
@@ -207,8 +206,8 @@ function App() {
               placeholder="Enter text"
               initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)", width: "40%" }}
               transition={{ duration: 0.2, ease: "linear" }}
-              whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "60%" }}
-              whileHover={{ width: "60%" }}
+              whileFocus={{ boxShadow: "0px 10px 50px rgba(59, 130, 246, .8)", width: "70%" }}
+              whileHover={{ width: "70%" }}
               className="bg-white bg-opacity-20 text-left text-xl px-5
                text-white h-14 rounded-full focus:outline-none focus:border-2 border-blue-500 ring-blue-500 placeholder:text-md placeholder:text-center hover:placeholder:text-start focus:placeholder:text-start"
             />
