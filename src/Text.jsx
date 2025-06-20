@@ -100,27 +100,33 @@ function Text({ result, parts, role, loading }) {
   return (
     <div className={`w-full flex ${role === "user" ?  "justify-end" :  " justify-start"}`}>
       {loading ? (
-        // Clean typing indicator for thinking state
+        // Fake text generation animation with looping
         <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }} 
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className={`inline-flex items-center backdrop-blur-xl border-2 border-white border-opacity-20 rounded-2xl py-4 px-6 shadow-xl bg-blue-500 bg-opacity-10`}
+          className="w-full py-2 px-2"
         >
-          <div className="flex space-x-1">
-            {[0, 1, 2].map((i) => (
+          <div className="space-y-3 overflow-hidden">
+            {/* Continuously generating lines */}
+            {[0, 1, 2, 3, 4].map((index) => (
               <motion.div
-                key={i}
-                className="w-2 h-2 bg-blue-400 rounded-full"
-                animate={{
-                  y: [0, -8, 0],
-                  opacity: [0.5, 1, 0.5]
+                key={index}
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ 
+                  width: [`0%`, `${Math.random() * 30 + 50}%`, `${Math.random() * 30 + 50}%`],
+                  opacity: [0, 0.3, 0]
                 }}
-                transition={{
-                  duration: 0.8,
+                transition={{ 
+                  duration: 2,
+                  delay: index * 0.4,
                   repeat: Infinity,
-                  delay: i * 0.2,
+                  repeatDelay: 1,
                   ease: "easeInOut"
+                }}
+                className="h-4 bg-white rounded-full"
+                style={{ 
+                  opacity: Math.max(0.05, 0.25 - index * 0.04)
                 }}
               />
             ))}
