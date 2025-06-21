@@ -847,10 +847,6 @@ function App() {
                       delay: 0.4,
                       scale: { times: [0, 0.7, 1], duration: 1.5 }
                     }}
-                    whileHover={{
-                      scale: 1.1,
-                      transition: { duration: 0.3, ease: "easeOut" }
-                    }}
                     className="absolute -right-16 md:-right-20 top-[20%] -translate-y-1/2"
                   >
                     <motion.svg 
