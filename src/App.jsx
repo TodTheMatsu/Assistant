@@ -11,14 +11,28 @@ function App() {
   const [onExistingChat, setOnExistingChat] = useState(false);
   const [currentChatIndex, setCurrentChatIndex] = useState(-1);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [useSearch, setUseSearch] = useState(false);
-  const [useFlowchart, setUseFlowchart] = useState(false);
+  const [activeMode, setActiveMode] = useState(null); // null = no mode, 'search' = search mode, 'flowchart' = flowchart mode
   const [selectedFiles, setSelectedFiles] = useState([]);
   const resultsRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
   
+  // Helper functions to check current mode
+  const useSearch = activeMode === 'search';
+  const useFlowchart = activeMode === 'flowchart';
+  
+  // Function to handle mode toggling
+  const toggleMode = (mode) => {
+    if (activeMode === mode) {
+      // If clicking the same mode, turn it off
+      setActiveMode(null);
+    } else {
+      // Otherwise, switch to the new mode
+      setActiveMode(mode);
+    }
+  };
+
   // Function definitions for AI function calling
   const flowchartFunction = {
     name: "createFlowchart",
@@ -1000,7 +1014,7 @@ function App() {
                                 type="checkbox"
                                 id="search-toggle"
                                 checked={useSearch}
-                                onChange={(e) => setUseSearch(e.target.checked)}
+                                onChange={() => toggleMode('search')}
                                 className="sr-only"
                               />
                               <motion.label 
@@ -1053,7 +1067,7 @@ function App() {
                                 type="checkbox"
                                 id="flowchart-toggle"
                                 checked={useFlowchart}
-                                onChange={(e) => setUseFlowchart(e.target.checked)}
+                                onChange={() => toggleMode('flowchart')}
                                 className="sr-only"
                               />
                               <motion.label 
@@ -1255,7 +1269,7 @@ function App() {
                             type="checkbox"
                             id="search-toggle-bottom"
                             checked={useSearch}
-                            onChange={(e) => setUseSearch(e.target.checked)}
+                            onChange={() => toggleMode('search')}
                             className="sr-only"
                           />
                           <motion.label 
@@ -1308,7 +1322,7 @@ function App() {
                             type="checkbox"
                             id="flowchart-toggle-bottom"
                             checked={useFlowchart}
-                            onChange={(e) => setUseFlowchart(e.target.checked)}
+                            onChange={() => toggleMode('flowchart')}
                             className="sr-only"
                           />
                           <motion.label 
