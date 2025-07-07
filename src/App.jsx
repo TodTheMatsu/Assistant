@@ -2,8 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { motion, AnimatePresence, delay } from "motion/react";
 import Text from "./Text.jsx";
+import { FlowChartProvider, useFlowChart } from "./FlowChartContext.jsx";
+import FlowChartEditor from "./components/FlowChartEditor.jsx";
 
 function App() {
+  const { handleAIModification, getFlowChartForAI, openEditor } = useFlowChart();
+  
   const [inputText, setInput] = useState(""); 
   const [loading, setLoading] = useState(false); 
   const [history, setHistory] = useState([]); 
@@ -36,7 +40,7 @@ function App() {
   // Function definitions for AI function calling
   const flowchartFunction = {
     name: "createFlowchart",
-    description: "Creates a flowchart diagram from the provided nodes and connections. Use this when the user asks for a flowchart, process diagram, workflow, or visual representation of steps.",
+    description: "Creates or modifies a flowchart diagram from the provided nodes and connections. Use this when the user asks for a flowchart, process diagram, workflow, visual representation of steps, or wants to modify an existing flowchart. If there's an existing flowchart context provided, modify it according to the user's request.",
     parameters: {
       type: "object",
       properties: {
@@ -58,7 +62,7 @@ function App() {
               type: { 
                 type: "string", 
                 enum: ["start", "end", "process", "decision", "data"],
-                description: "Type of node: start (oval), end (oval), process (rectangle), decision (diamond), data (parallelogram)"
+                description: "Type of node: start (green oval), end (red oval), process (blue rectangle), decision (yellow diamond), data (orange parallelogram)"
               },
               position: {
                 type: "object",
@@ -393,6 +397,16 @@ function App() {
       const textContent = messageParts.find(part => part.text)?.text || '';
       const isFlowchartRequest = useFlowchart || /\b(flowchart|flow chart|diagram|workflow|process flow|visual|chart|process)\b/i.test(textContent);
       
+      // If it's a flowchart request and we have an active flowchart, include it in the context
+      if (isFlowchartRequest) {
+        const currentFlowChart = getFlowChartForAI();
+        if (currentFlowChart) {
+          messageParts.push({
+            text: `\n\n[Current FlowChart Context]\nTitle: ${currentFlowChart.title}\nDescription: ${currentFlowChart.description}\nNodes: ${JSON.stringify(currentFlowChart.nodes)}\nEdges: ${JSON.stringify(currentFlowChart.edges)}\n\nPlease modify this existing flowchart based on the user's request.`
+          });
+        }
+      }
+      
       console.log('Model selection debug:', {
         textContent,
         useFlowchart,
@@ -437,12 +451,15 @@ function App() {
             const flowchartData = functionCall.args;
             console.log('Flowchart data:', flowchartData);
             
-            // Create AI message with flowchart
+            // Handle AI flowchart creation/modification using context
+            const chartId = handleAIModification(flowchartData);
+            
+            // Create AI message with flowchart reference
             aiMessage = {
               role: "model",
               parts: [
-                { text: `I've created a flowchart for you: "${flowchartData.title}"` },
-                { flowchart: flowchartData }
+                { text: `I've created a flowchart for you: "${flowchartData.title}". You can open the editor to view and modify it.` },
+                { flowchart: flowchartData, chartId }
               ]
             };
           } else {
@@ -1111,6 +1128,21 @@ function App() {
                             </div>
                           </div>
                           
+                          {/* Flowchart Editor Button */}
+                          <motion.button
+                            type="button"
+                            onClick={openEditor}
+                            className="relative flex items-center justify-center px-4 py-2 rounded-xl transition-all duration-300 backdrop-blur-sm overflow-hidden bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 border border-green-400/50 hover:shadow-xl hover:shadow-green-500/40"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            style={{ isolation: 'isolate' }}
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <span className="text-sm font-medium">Open Editor</span>
+                          </motion.button>
+                          
                           {/* Send button */}
                           <motion.button
                             type="button"
@@ -1411,6 +1443,9 @@ function App() {
         </motion.div>
       </div>
       </div>
+      
+      {/* Flow Chart Editor */}
+      <FlowChartEditor />
     </div>
     </AnimatePresence>
   );
