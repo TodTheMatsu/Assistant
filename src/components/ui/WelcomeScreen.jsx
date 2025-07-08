@@ -111,24 +111,25 @@ const WelcomeScreen = ({
         <form className="w-full flex justify-center items-center">
           <div className="relative w-full max-w-2xl">
             <div className="bg-white bg-opacity-20 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:shadow-2xl focus-within:shadow-blue-500/20 transition-all duration-300">
-              <motion.input
-                ref={inputRef}
-                type="text"
-                value={inputText}
-                onChange={handleChange}
-                onPaste={handlePaste}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    fetchAIResponse(e);
-                  }
-                }}
-                placeholder="Enter text or paste images"
-                initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
-                transition={{ duration: 0.2, ease: "linear" }}
-                className="w-full bg-transparent text-left text-xl px-6 py-4
-                 text-white rounded-t-2xl focus:outline-none placeholder:text-lg placeholder:text-white placeholder:text-opacity-50"
-              />
+              <div className="relative">
+                <motion.input
+                  ref={inputRef}
+                  type="text"
+                  value={inputText}
+                  onChange={handleChange}
+                  onPaste={handlePaste}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      fetchAIResponse(e);
+                    }
+                  }}
+                  placeholder="Enter text or paste images"
+                  initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
+                  transition={{ duration: 0.2, ease: "linear" }}
+                  className={`w-full bg-transparent text-left text-xl px-6 py-4 text-white rounded-t-2xl focus:outline-none placeholder:text-lg placeholder:text-white placeholder:text-opacity-50 ${useSearch ? 'pr-32' : ''}`}
+                />
+              </div>
               
               {/* File previews */}
               {selectedFiles.length > 0 && (
@@ -292,6 +293,23 @@ const WelcomeScreen = ({
                       )}
                     </AnimatePresence>
                   </div>
+                  
+                  {/* Active Tool Indicator */}
+                  <AnimatePresence>
+                    {useSearch && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-blue-500/20 border border-blue-400/50"
+                      >
+                        <svg className="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span className="text-sm font-medium text-blue-200">Web Search Active</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 
                 {/* Send button */}

@@ -16,7 +16,7 @@ import { useChatHistory } from "./hooks/useChatHistory.js";
 import { getFileIcon } from "./utils/fileUtils.js";
 import AIService from "./services/AIService.js";
 
-function App() {
+function AppContent() {
   const { handleAIModification, getFlowChartForAI, openEditor } = useFlowChart();
   
   // Use custom hooks
@@ -218,78 +218,85 @@ function App() {
   };
 
   return (
-    <FlowChartProvider>
-      <div className="w-screen h-screen bg-black">
-        <div className="w-screen h-screen flex flex-row justify-center items-end">
-          {/* Sidebar Component */}
-          <Sidebar
-            sidebarCollapsed={sidebarCollapsed}
-            setSidebarCollapsed={setSidebarCollapsed}
-            previousChats={previousChats}
-            currentChatIndex={currentChatIndex}
-            createChat={createChat}
-            loadChat={loadChat}
-            deleteChat={deleteChat}
-          />
+    <div className="w-screen h-screen bg-black">
+      <div className="w-screen h-screen flex flex-row justify-center items-end">
+        {/* Sidebar Component */}
+        <Sidebar
+          sidebarCollapsed={sidebarCollapsed}
+          setSidebarCollapsed={setSidebarCollapsed}
+          previousChats={previousChats}
+          currentChatIndex={currentChatIndex}
+          createChat={createChat}
+          loadChat={loadChat}
+          deleteChat={deleteChat}
+        />
 
-          {/* Main Content */}
-          <div className="flex-1 h-full flex flex-col justify-start items-center bg-white bg-opacity-5 backdrop-blur-3xl shadow-[inset_0px_30px_600px_rgba(255,255,255,.01)]">
-            {history.length === 0 && !loading ? (
-              <WelcomeScreen
-                inputText={inputText}
-                handleChange={handleChange}
-                handlePaste={handlePaste}
-                fetchAIResponse={fetchAIResponse}
-                loading={loading}
-                selectedFiles={selectedFiles}
-                handleFileSelect={handleFileSelect}
-                removeFile={removeFile}
-                getFileIcon={getFileIcon}
-                dropdownOpen={dropdownOpen}
-                setDropdownOpen={setDropdownOpen}
-                toggleMode={toggleMode}
-                useSearch={useSearch}
-                openEditor={openEditor}
-                inputRef={inputRef}
-                fileInputRef={fileInputRef}
-                dropdownRef={dropdownRef}
-              />
-            ) : (
-              <ChatInterface
-                history={history}
-                loading={loading}
-                resultsRef={resultsRef}
-              />
-            )}
+        {/* Main Content */}
+        <div className="flex-1 h-full flex flex-col justify-start items-center bg-white bg-opacity-5 backdrop-blur-3xl shadow-[inset_0px_30px_600px_rgba(255,255,255,.01)]">
+          {history.length === 0 && !loading ? (
+            <WelcomeScreen
+              inputText={inputText}
+              handleChange={handleChange}
+              handlePaste={handlePaste}
+              fetchAIResponse={fetchAIResponse}
+              loading={loading}
+              selectedFiles={selectedFiles}
+              handleFileSelect={handleFileSelect}
+              removeFile={removeFile}
+              getFileIcon={getFileIcon}
+              dropdownOpen={dropdownOpen}
+              setDropdownOpen={setDropdownOpen}
+              toggleMode={toggleMode}
+              useSearch={useSearch}
+              openEditor={openEditor}
+              inputRef={inputRef}
+              fileInputRef={fileInputRef}
+              dropdownRef={dropdownRef}
+            />
+          ) : (
+            <ChatInterface
+              history={history}
+              loading={loading}
+              resultsRef={resultsRef}
+              useSearch={useSearch}
+            />
+          )}
 
-            {/* Input Area - shown only when there are messages */}
-            {history.length > 0 && (
-              <InputArea
-                inputText={inputText}
-                handleChange={handleChange}
-                handlePaste={handlePaste}
-                fetchAIResponse={fetchAIResponse}
-                loading={loading}
-                selectedFiles={selectedFiles}
-                handleFileSelect={handleFileSelect}
-                removeFile={removeFile}
-                getFileIcon={getFileIcon}
-                dropdownOpen={dropdownOpen}
-                setDropdownOpen={setDropdownOpen}
-                toggleMode={toggleMode}
-                useSearch={useSearch}
-                openEditor={openEditor}
-                inputRef={inputRef}
-                fileInputRef={fileInputRef}
-                dropdownRef2={dropdownRef2}
-              />
-            )}
-          </div>
+          {/* Input Area - shown only when there are messages */}
+          {history.length > 0 && (
+            <InputArea
+              inputText={inputText}
+              handleChange={handleChange}
+              handlePaste={handlePaste}
+              fetchAIResponse={fetchAIResponse}
+              loading={loading}
+              selectedFiles={selectedFiles}
+              handleFileSelect={handleFileSelect}
+              removeFile={removeFile}
+              getFileIcon={getFileIcon}
+              dropdownOpen={dropdownOpen}
+              setDropdownOpen={setDropdownOpen}
+              toggleMode={toggleMode}
+              useSearch={useSearch}
+              openEditor={openEditor}
+              inputRef={inputRef}
+              fileInputRef={fileInputRef}
+              dropdownRef2={dropdownRef2}
+            />
+          )}
         </div>
-        
-        {/* Flow Chart Editor */}
-        <FlowChartEditor />
       </div>
+      
+      {/* Flow Chart Editor */}
+      <FlowChartEditor />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <FlowChartProvider>
+      <AppContent />
     </FlowChartProvider>
   );
 }

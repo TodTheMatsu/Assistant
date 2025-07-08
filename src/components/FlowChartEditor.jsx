@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ReactFlow,
@@ -442,9 +442,9 @@ Please modify the flowchart according to the user's request. Maintain existing n
     }
   };
 
-  if (!isEditorOpen) return null;
 
   return (
+    isEditorOpen && (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -773,6 +773,7 @@ Please modify the flowchart according to the user's request. Maintain existing n
         </motion.div>
       </motion.div>
     </AnimatePresence>
+    )
   );
 };
 
