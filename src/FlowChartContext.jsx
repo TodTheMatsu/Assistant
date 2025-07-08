@@ -11,16 +11,30 @@ export const useFlowChart = () => {
 };
 
 export const FlowChartProvider = ({ children }) => {
-  // State for managing flow charts
-  const [flowCharts, setFlowCharts] = useState([]);
-  const [activeFlowChartId, setActiveFlowChartId] = useState(null);
+  // State for managing flow charts per chat
+  const [chatFlowCharts, setChatFlowCharts] = useState({}); // { chatId: { flowCharts: [...], activeFlowChartId: '...' } }
+  const [currentChatId, setCurrentChatId] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+
+  // Get current chat's flowchart data
+  const currentChatData = chatFlowCharts[currentChatId] || { flowCharts: [], activeFlowChartId: null };
+  const flowCharts = currentChatData.flowCharts;
+  const activeFlowChartId = currentChatData.activeFlowChartId;
 
   // Get the currently active flow chart
   const activeFlowChart = flowCharts.find(chart => chart.id === activeFlowChartId);
 
-  // Create a new flow chart
+  // Set the current chat (called when switching chats)
+  const setCurrentChat = useCallback((chatId) => {
+    setCurrentChatId(chatId);
+    // Close editor when switching chats to avoid confusion
+    setIsEditorOpen(false);
+  }, []);
+
+  // Create a new flow chart for the current chat
   const createFlowChart = useCallback((flowChartData) => {
+    if (!currentChatId) return null;
+    
     const newFlowChart = {
       id: Date.now().toString(),
       ...flowChartData,
@@ -28,44 +42,77 @@ export const FlowChartProvider = ({ children }) => {
       updatedAt: new Date().toISOString()
     };
     
-    setFlowCharts(prev => [...prev, newFlowChart]);
-    setActiveFlowChartId(newFlowChart.id);
+    setChatFlowCharts(prev => ({
+      ...prev,
+      [currentChatId]: {
+        flowCharts: [...(prev[currentChatId]?.flowCharts || []), newFlowChart],
+        activeFlowChartId: newFlowChart.id
+      }
+    }));
+    
     return newFlowChart;
-  }, []);
+  }, [currentChatId]);
 
-  // Update an existing flow chart
+  // Update an existing flow chart in the current chat
   const updateFlowChart = useCallback((flowChartId, updates) => {
-    setFlowCharts(prev => prev.map(chart => 
-      chart.id === flowChartId 
-        ? { 
-            ...chart, 
-            ...updates, 
-            updatedAt: new Date().toISOString() 
-          }
-        : chart
-    ));
-  }, []);
+    if (!currentChatId) return;
+    
+    setChatFlowCharts(prev => ({
+      ...prev,
+      [currentChatId]: {
+        ...prev[currentChatId],
+        flowCharts: prev[currentChatId]?.flowCharts.map(chart => 
+          chart.id === flowChartId 
+            ? { 
+                ...chart, 
+                ...updates, 
+                updatedAt: new Date().toISOString() 
+              }
+            : chart
+        ) || []
+      }
+    }));
+  }, [currentChatId]);
 
-  // Update the active flow chart
+  // Update the active flow chart in the current chat
   const updateActiveFlowChart = useCallback((updates) => {
-    if (activeFlowChartId) {
+    if (activeFlowChartId && currentChatId) {
       updateFlowChart(activeFlowChartId, updates);
     }
-  }, [activeFlowChartId, updateFlowChart]);
+  }, [activeFlowChartId, currentChatId, updateFlowChart]);
 
-  // Delete a flow chart
+  // Delete a flow chart from the current chat
   const deleteFlowChart = useCallback((flowChartId) => {
-    setFlowCharts(prev => prev.filter(chart => chart.id !== flowChartId));
-    if (activeFlowChartId === flowChartId) {
-      const remaining = flowCharts.filter(chart => chart.id !== flowChartId);
-      setActiveFlowChartId(remaining.length > 0 ? remaining[0].id : null);
-    }
-  }, [activeFlowChartId, flowCharts]);
+    if (!currentChatId) return;
+    
+    setChatFlowCharts(prev => {
+      const currentData = prev[currentChatId] || { flowCharts: [], activeFlowChartId: null };
+      const remainingCharts = currentData.flowCharts.filter(chart => chart.id !== flowChartId);
+      
+      return {
+        ...prev,
+        [currentChatId]: {
+          flowCharts: remainingCharts,
+          activeFlowChartId: currentData.activeFlowChartId === flowChartId 
+            ? (remainingCharts.length > 0 ? remainingCharts[0].id : null)
+            : currentData.activeFlowChartId
+        }
+      };
+    });
+  }, [currentChatId]);
 
-  // Set the active flow chart
+  // Set the active flow chart for the current chat
   const setActiveFlowChart = useCallback((flowChartId) => {
-    setActiveFlowChartId(flowChartId);
-  }, []);
+    if (!currentChatId) return;
+    
+    setChatFlowCharts(prev => ({
+      ...prev,
+      [currentChatId]: {
+        ...prev[currentChatId],
+        activeFlowChartId: flowChartId
+      }
+    }));
+  }, [currentChatId]);
 
   // Open/close the editor
   const openEditor = useCallback(() => {
@@ -78,14 +125,18 @@ export const FlowChartProvider = ({ children }) => {
 
   // Handle AI modifications to the active flow chart
   const handleAIModification = useCallback((aiFlowChartData) => {
+    if (!currentChatId) return null;
+    
     if (activeFlowChartId) {
       // Update existing flow chart with AI modifications
       updateActiveFlowChart(aiFlowChartData);
+      return activeFlowChartId;
     } else {
       // Create new flow chart if none is active
-      createFlowChart(aiFlowChartData);
+      const newChart = createFlowChart(aiFlowChartData);
+      return newChart?.id;
     }
-  }, [activeFlowChartId, updateActiveFlowChart, createFlowChart]);
+  }, [activeFlowChartId, currentChatId, updateActiveFlowChart, createFlowChart]);
 
   // Get flow chart data for AI (current state to send to AI for modifications)
   const getFlowChartForAI = useCallback(() => {
@@ -98,8 +149,10 @@ export const FlowChartProvider = ({ children }) => {
     activeFlowChart,
     activeFlowChartId,
     isEditorOpen,
+    currentChatId,
     
     // Actions
+    setCurrentChat,
     createFlowChart,
     updateFlowChart,
     updateActiveFlowChart,

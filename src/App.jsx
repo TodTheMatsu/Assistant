@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Text from "./Text.jsx";
 import { FlowChartProvider, useFlowChart } from "./FlowChartContext.jsx";
@@ -17,7 +17,7 @@ import { getFileIcon } from "./utils/fileUtils.js";
 import AIService from "./services/AIService.js";
 
 function AppContent() {
-  const { handleAIModification, getFlowChartForAI, openEditor, isEditorOpen } = useFlowChart();
+  const { handleAIModification, getFlowChartForAI, openEditor, isEditorOpen, setCurrentChat } = useFlowChart();
   
   // Use custom hooks
   const {
@@ -74,6 +74,39 @@ function AppContent() {
     }
   };
 
+  // Enhanced chat functions that also handle flowchart context
+  const handleCreateChat = useCallback(async () => {
+    await createChat();
+    // Set up new chat in flowchart context
+    const newChatId = `chat_${Date.now()}`;
+    setCurrentChat(newChatId);
+  }, [createChat, setCurrentChat]);
+
+  const handleLoadChat = useCallback((chat, index) => {
+    loadChat(chat, index);
+    // Set up existing chat in flowchart context
+    const chatId = `chat_${index}`;
+    setCurrentChat(chatId);
+  }, [loadChat, setCurrentChat]);
+
+  const handleDeleteChat = useCallback((indexToDelete, e) => {
+    deleteChat(indexToDelete, e);
+    // Note: FlowChart context automatically handles cleanup when switching chats
+  }, [deleteChat]);
+
+  // Initialize flowchart context with initial chat
+  useEffect(() => {
+    if (currentChatIndex === -1 && !onExistingChat) {
+      // This is a new chat session
+      const initialChatId = `chat_${Date.now()}`;
+      setCurrentChat(initialChatId);
+    } else if (currentChatIndex >= 0) {
+      // We're on an existing chat
+      const chatId = `chat_${currentChatIndex}`;
+      setCurrentChat(chatId);
+    }
+  }, [currentChatIndex, onExistingChat, setCurrentChat]);
+
   const fetchAIResponse = async (e) => {
     e.preventDefault();
     
@@ -128,21 +161,13 @@ function AppContent() {
       setInput("");
       clearFiles();
       
-      // Check if the request is asking for a flowchart
-      const textContent = messageParts.find(part => part.text)?.text || '';
-      const isFlowchartRequest = aiService.isFlowchartRequest(textContent);
+      // Get current flowchart for context (always pass it to AI)
+      const currentFlowChart = getFlowChartForAI();
       
-      // Get current flowchart for context if needed (if editor is open or it's a flowchart request)
-      let currentFlowChart = null;
-      if (isFlowchartRequest || isEditorOpen) {
-        currentFlowChart = getFlowChartForAI();
-      }
-      
-      // Generate AI response (use flowchart model if editor is open or it's a flowchart request)
+      // Generate AI response with simplified parameters
       const response = await aiService.generateResponse(
         messageParts,
         useSearch,
-        isFlowchartRequest || isEditorOpen,
         currentFlowChart,
         history
       );
@@ -234,9 +259,9 @@ function AppContent() {
           setSidebarCollapsed={setSidebarCollapsed}
           previousChats={previousChats}
           currentChatIndex={currentChatIndex}
-          createChat={createChat}
-          loadChat={loadChat}
-          deleteChat={deleteChat}
+          createChat={handleCreateChat}
+          loadChat={handleLoadChat}
+          deleteChat={handleDeleteChat}
         />
 
         {/* Main Content - adjusts width when editor is open */}

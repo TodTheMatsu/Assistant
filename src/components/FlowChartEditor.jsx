@@ -317,7 +317,7 @@ const FlowChartEditor = () => {
       console.log(`Starting AI request (attempt ${retryCount + 1}/${maxRetries + 1})...`);
       
       const flowchartModel = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-2.5-flash",
         tools: [{ functionDeclarations: [flowchartFunction] }]
       });
 

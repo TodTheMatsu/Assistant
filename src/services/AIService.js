@@ -7,14 +7,15 @@ class AIService {
   }
 
   initializeModels() {
-    this.model = this.genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
-    this.searchModel = this.genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash",
-      tools: [{ googleSearch: {} }]
-    });
-    this.flowchartModel = this.genAI.getGenerativeModel({
+    // Create separate models for different use cases
+    this.regularModel = this.genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       tools: [{ functionDeclarations: [this.getFlowchartFunction()] }]
+    });
+    
+    this.searchModel = this.genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      tools: [{ googleSearch: {} }]
     });
   }
 
@@ -102,7 +103,7 @@ class AIService {
         .filter(entry => entry.parts.length > 0);
 
       const prompt = "Generate a short title for the following chat history, you will only give one title and nothing else: " + JSON.stringify(textOnlyHistory);
-      const result = await this.model.generateContent(prompt);
+      const result = await this.regularModel.generateContent(prompt);
       return result.response.text();
     } catch (error) {
       console.error("Error generating AI content:", error);
@@ -110,26 +111,20 @@ class AIService {
     }
   }
 
-  async generateResponse(messageParts, useSearch = false, isFlowchartRequest = false, currentFlowChart = null, history = []) {
+  async generateResponse(messageParts, useSearch = false, currentFlowChart = null, history = []) {
     try {
       // Prepare the message parts with flowchart context if needed
       const processedParts = [...messageParts];
       
-      if (isFlowchartRequest && currentFlowChart) {
+      // Always include flowchart context if available (only when not in search mode)
+      if (currentFlowChart && !useSearch) {
         processedParts.push({
-          text: `\n\n[Current FlowChart Context]\nTitle: ${currentFlowChart.title}\nDescription: ${currentFlowChart.description}\nNodes: ${JSON.stringify(currentFlowChart.nodes)}\nEdges: ${JSON.stringify(currentFlowChart.edges)}\n\nPlease modify this existing flowchart based on the user's request.`
+          text: `\n\n[Current FlowChart Context]\nTitle: ${currentFlowChart.title}\nDescription: ${currentFlowChart.description}\nNodes: ${JSON.stringify(currentFlowChart.nodes)}\nEdges: ${JSON.stringify(currentFlowChart.edges)}\n\nYou can modify this existing flowchart if the user's request relates to it.`
         });
       }
 
-      // Select appropriate model
-      let selectedModel;
-      if (isFlowchartRequest) {
-        selectedModel = this.flowchartModel;
-      } else if (useSearch) {
-        selectedModel = this.searchModel;
-      } else {
-        selectedModel = this.model;
-      }
+      // Choose model based on search mode
+      const selectedModel = useSearch ? this.searchModel : this.regularModel;
 
       const chat = selectedModel.startChat({ 
         history: this.cleanHistoryForAI(history) 
@@ -149,10 +144,6 @@ class AIService {
         error: error.message
       };
     }
-  }
-
-  isFlowchartRequest(textContent) {
-    return /\b(flowchart|flow chart|diagram|workflow|process flow|visual|chart|process)\b/i.test(textContent);
   }
 }
 
