@@ -445,30 +445,23 @@ Please modify the flowchart according to the user's request. Maintain existing n
 
 
   return (
-    isEditorOpen && (
-    <AnimatePresence>
+
+
+      isEditorOpen && (
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
-        className="fixed inset-0 z-50 bg-black "
-        onClick={handleClose}
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="fixed top-0 right-0 bottom-0 w-[50%] z-40 bg-black 10 border-l border-white border-opacity-20"
+        onClick={(e) => e.stopPropagation()}
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full h-full bg-white bg-opacity-10 relative"
-          onClick={(e) => e.stopPropagation()}
-        >
           {/* Header */}
-          <div className="absolute top-0 left-0 right-0 z-10 bg-white bg-opacity-15 border-b border-white border-opacity-20 p-6">
+          <div className="absolute top-0 left-0 right-0 z-10 bg-white bg-opacity-15 border-b border-white border-opacity-20 p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <h2 className="text-2xl font-thin text-white">
-                  {activeFlowChart?.title || 'Flow Chart Editor'}
+              <div className="flex items-center space-x-3">
+                <h2 className="text-xl font-thin text-white">
+                  {activeFlowChart?.title || 'Flow Chart'}
                 </h2>
                 {isModified && (
                   <motion.span 
@@ -477,64 +470,25 @@ Please modify the flowchart according to the user's request. Maintain existing n
                     className="text-blue-300 text-sm font-light flex items-center space-x-1"
                   >
                     <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                    <span>Unsaved changes</span>
+                    <span>Unsaved</span>
                   </motion.span>
                 )}
               </div>
               
-              <div className="flex items-center space-x-3">
-                {/* Flow Chart Selector */}
-                {flowCharts.length > 1 && (
-                  <select
-                    value={activeFlowChart?.id || ''}
-                    onChange={(e) => setActiveFlowChart(e.target.value)}
-                    className="bg-white bg-opacity-20 text-white px-4 py-2 rounded-xl border border-white border-opacity-30 focus:border-blue-400 focus:outline-none transition-all duration-200"
-                  >
-                    {flowCharts.map((chart) => (
-                      <option key={chart.id} value={chart.id} className="bg-gray-800 text-white">
-                        {chart.title}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                
-                {/* New Chart Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleNewFlowChart}
-                  className="bg-blue-500 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-blue-500/25"
-                >
-                  New Chart
-                </motion.button>
-                
+              <div className="flex items-center space-x-2">
                 {/* Save Button */}
                 <motion.button
                   whileHover={{ scale: isModified ? 1.05 : 1 }}
                   whileTap={{ scale: isModified ? 0.95 : 1 }}
                   onClick={saveChanges}
                   disabled={!isModified}
-                  className={`px-4 py-2 rounded-xl transition-all duration-200 font-medium shadow-lg ${
+                  className={`px-3 py-1 rounded-lg transition-all duration-200 text-sm font-medium ${
                     isModified
-                      ? 'bg-green-500 bg-opacity-80 hover:bg-opacity-100 text-white hover:shadow-green-500/25'
+                      ? 'bg-green-500 bg-opacity-80 hover:bg-opacity-100 text-white'
                       : 'bg-white bg-opacity-10 text-white text-opacity-50 cursor-not-allowed'
                   }`}
                 >
                   Save
-                </motion.button>
-                
-                {/* AI Modify Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowAiPanel(!showAiPanel)}
-                  className={`px-4 py-2 rounded-xl transition-all duration-200 font-medium shadow-lg ${
-                    showAiPanel
-                      ? 'bg-purple-500 bg-opacity-100 text-white shadow-purple-500/25'
-                      : 'bg-purple-500 bg-opacity-80 hover:bg-opacity-100 text-white hover:shadow-purple-500/25'
-                  }`}
-                >
-                  AI Modify
                 </motion.button>
                 
                 {/* Close Button */}
@@ -542,7 +496,7 @@ Please modify the flowchart according to the user's request. Maintain existing n
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleClose}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-xl transition-all duration-200 font-medium"
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded-lg transition-all duration-200 text-sm font-medium"
                 >
                   Close
                 </motion.button>
@@ -551,7 +505,7 @@ Please modify the flowchart according to the user's request. Maintain existing n
           </div>
 
           {/* ReactFlow Editor */}
-          <div className="w-full h-full pt-20">
+          <div className="w-full h-full pt-16">
             <ReactFlow
               nodes={enhancedNodes}
               edges={edges}
@@ -568,46 +522,46 @@ Please modify the flowchart according to the user's request. Maintain existing n
               <MiniMap nodeColor={(node) => getNodeColor(node.type || node.data?.type)} />
               
               {/* Add Node Panel */}
-              <Panel position="top-left" className="bg-white bg-opacity-15 p-4 rounded-2xl border border-white border-opacity-20">
-                <div className="text-white text-sm mb-3 font-medium">Add Node:</div>
-                <div className="flex flex-col space-y-2">
+              <Panel position="top-left" className="bg-white bg-opacity-15 p-3 rounded-xl border border-white border-opacity-20">
+                <div className="text-white text-xs mb-2 font-medium">Add Node:</div>
+                <div className="flex flex-col space-y-1">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => addNode('start')}
-                    className="bg-green-500 bg-opacity-80 hover:bg-opacity-100 text-white px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-green-500/25"
+                    className="bg-green-500 bg-opacity-80 hover:bg-opacity-100 text-white px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200"
                   >
                     Start
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => addNode('process')}
-                    className="bg-blue-500 bg-opacity-80 hover:bg-opacity-100 text-white px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-blue-500/25"
+                    className="bg-blue-500 bg-opacity-80 hover:bg-opacity-100 text-white px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200"
                   >
                     Process
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => addNode('decision')}
-                    className="bg-yellow-500 bg-opacity-80 hover:bg-opacity-100 text-white px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-yellow-500/25"
+                    className="bg-yellow-500 bg-opacity-80 hover:bg-opacity-100 text-white px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200"
                   >
                     Decision
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => addNode('data')}
-                    className="bg-orange-500 bg-opacity-80 hover:bg-opacity-100 text-white px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-orange-500/25"
+                    className="bg-orange-500 bg-opacity-80 hover:bg-opacity-100 text-white px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200"
                   >
                     Data
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => addNode('end')}
-                    className="bg-red-500 bg-opacity-80 hover:bg-opacity-100 text-white px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-red-500/25"
+                    className="bg-red-500 bg-opacity-80 hover:bg-opacity-100 text-white px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200"
                   >
                     End
                   </motion.button>
@@ -615,218 +569,8 @@ Please modify the flowchart according to the user's request. Maintain existing n
               </Panel>
             </ReactFlow>
           </div>
-          
-          {/* AI Chat & History Panel */}
-          {showAiPanel && (
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="absolute top-20 right-6 bottom-6 w-96 bg-black border border-white border-opacity-20 rounded-2xl flex flex-col z-20 shadow-2xl"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white border-opacity-20">
-                <h3 className="text-xl font-medium text-white">AI Assistant</h3>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowAiPanel(false)}
-                  className="text-white text-opacity-70 hover:text-opacity-100 transition-all duration-200"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </motion.button>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex border-b border-white border-opacity-20">
-                <button
-                  onClick={() => setActiveTab('chat')}
-                  className={`flex-1 px-6 py-3 text-sm font-medium transition-all duration-200 ${
-                    activeTab === 'chat'
-                      ? 'text-white bg-white bg-opacity-10 border-b-2 border-blue-400'
-                      : 'text-white text-opacity-70 hover:text-opacity-100 hover:bg-white hover:bg-opacity-5'
-                  }`}
-                >
-                  Chat
-                </button>
-                <button
-                  onClick={() => setActiveTab('history')}
-                  className={`flex-1 px-6 py-3 text-sm font-medium transition-all duration-200 ${
-                    activeTab === 'history'
-                      ? 'text-white bg-white bg-opacity-10 border-b-2 border-blue-400'
-                      : 'text-white text-opacity-70 hover:text-opacity-100 hover:bg-white hover:bg-opacity-5'
-                  }`}
-                >
-                  History ({flowchartHistory.length})
-                </button>
-              </div>
-
-              {/* Chat Tab */}
-              {activeTab === 'chat' && (
-                <>
-                  {/* Chat Messages */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {chatHistory.length === 0 ? (
-                      <div className="text-white text-opacity-70 text-center text-sm leading-relaxed">
-                        <div className="mb-4">
-                          <svg className="w-12 h-12 mx-auto mb-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                        </div>
-                        Ask me to modify your flowchart!<br/>
-                        <div className="mt-3 space-y-1 text-xs text-white text-opacity-50">
-                          <div>• "Add a decision node after step 2"</div>
-                          <div>• "Connect the start to the process"</div>
-                          <div>• "Change the end node to say 'Complete'"</div>
-                        </div>
-                      </div>
-                    ) : (
-                      chatHistory.map((msg) => (
-                        <motion.div
-                          key={msg.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm ${
-                              msg.isUser
-                                ? 'bg-blue-500 bg-opacity-80 text-white'
-                                : msg.metadata?.type === 'error'
-                                ? 'bg-red-500 bg-opacity-80 text-white'
-                                : msg.metadata?.type === 'success'
-                                ? 'bg-green-500 bg-opacity-80 text-white'
-                                : msg.metadata?.type === 'rollback'
-                                ? 'bg-orange-500 bg-opacity-80 text-white'
-                                : 'bg-white bg-opacity-15 text-white'
-                            }`}
-                          >
-                            {msg.message}
-                            <div className="text-xs opacity-60 mt-2">
-                              {msg.timestamp.toLocaleTimeString()}
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
-                    {aiLoading && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-start"
-                      >
-                        <div className="bg-white bg-opacity-15 text-white px-4 py-3 rounded-2xl text-sm flex items-center space-x-3">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>AI is thinking...</span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-
-                  {/* Chat Input */}
-                  <div className="p-6 border-t border-white border-opacity-20">
-                    <div className="flex space-x-3">
-                      <input
-                        type="text"
-                        value={aiInput}
-                        onChange={(e) => setAiInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleAiRequest();
-                          }
-                        }}
-                        placeholder="Ask AI to modify the flowchart..."
-                        className="flex-1 bg-white bg-opacity-15 text-white px-4 py-3 rounded-xl border border-white border-opacity-20 focus:border-blue-400 focus:outline-none text-sm placeholder-white placeholder-opacity-50"
-                        disabled={aiLoading}
-                      />
-                      <motion.button
-                        whileHover={{ scale: aiInput.trim() && !aiLoading ? 1.05 : 1 }}
-                        whileTap={{ scale: aiInput.trim() && !aiLoading ? 0.95 : 1 }}
-                        onClick={handleAiRequest}
-                        disabled={!aiInput.trim() || aiLoading}
-                        className={`px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
-                          !aiInput.trim() || aiLoading
-                            ? 'bg-white bg-opacity-10 text-white text-opacity-40 cursor-not-allowed'
-                            : 'bg-blue-500 bg-opacity-80 hover:bg-opacity-100 text-white shadow-lg hover:shadow-blue-500/25'
-                        }`}
-                      >
-                        Send
-                      </motion.button>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* History Tab */}
-              {activeTab === 'history' && (
-                <div className="flex-1 overflow-y-auto p-6">
-                  <div className="space-y-3">
-                    {flowchartHistory.length === 0 ? (
-                      <div className="text-white text-opacity-70 text-center text-sm leading-relaxed">
-                        <div className="mb-4">
-                          <svg className="w-12 h-12 mx-auto mb-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        No history yet. Make some changes to see versions here.
-                      </div>
-                    ) : (
-                      flowchartHistory.map((state, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className={`p-4 rounded-xl border transition-all duration-200 ${
-                            index === currentHistoryIndex
-                              ? 'border-blue-400 bg-blue-500 bg-opacity-15 shadow-lg shadow-blue-500/10'
-                              : 'border-white border-opacity-20 bg-white bg-opacity-5 hover:bg-opacity-10'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="text-white text-sm font-medium flex items-center space-x-2">
-                                <span>Version {index + 1}</span>
-                                {index === currentHistoryIndex && (
-                                  <span className="px-2 py-1 bg-blue-500 bg-opacity-80 text-xs rounded-lg">
-                                    Current
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-white text-opacity-60 text-xs mt-1">
-                                {state.nodes.length} nodes, {state.edges.length} connections
-                              </div>
-                              <div className="text-white text-opacity-50 text-xs mt-1">
-                                {new Date(state.timestamp).toLocaleString()}
-                              </div>
-                            </div>
-                            {index !== currentHistoryIndex && (
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => rollbackToState(index)}
-                                className="px-3 py-1 bg-orange-500 bg-opacity-80 hover:bg-opacity-100 text-white text-xs rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-orange-500/25"
-                              >
-                                Restore
-                              </motion.button>
-                            )}
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
         </motion.div>
-      </motion.div>
-    </AnimatePresence>
-    )
+            )
   );
 };
 

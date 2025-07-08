@@ -17,7 +17,7 @@ import { getFileIcon } from "./utils/fileUtils.js";
 import AIService from "./services/AIService.js";
 
 function AppContent() {
-  const { handleAIModification, getFlowChartForAI, openEditor } = useFlowChart();
+  const { handleAIModification, getFlowChartForAI, openEditor, isEditorOpen } = useFlowChart();
   
   // Use custom hooks
   const {
@@ -132,17 +132,17 @@ function AppContent() {
       const textContent = messageParts.find(part => part.text)?.text || '';
       const isFlowchartRequest = aiService.isFlowchartRequest(textContent);
       
-      // Get current flowchart for context if needed
+      // Get current flowchart for context if needed (if editor is open or it's a flowchart request)
       let currentFlowChart = null;
-      if (isFlowchartRequest) {
+      if (isFlowchartRequest || isEditorOpen) {
         currentFlowChart = getFlowChartForAI();
       }
       
-      // Generate AI response
+      // Generate AI response (use flowchart model if editor is open or it's a flowchart request)
       const response = await aiService.generateResponse(
         messageParts,
         useSearch,
-        isFlowchartRequest,
+        isFlowchartRequest || isEditorOpen,
         currentFlowChart,
         history
       );
@@ -160,11 +160,19 @@ function AppContent() {
             // Handle AI flowchart creation/modification using context
             const chartId = handleAIModification(flowchartData);
             
+            // Automatically open the flowchart editor if it's not already open
+            if (!isEditorOpen) {
+              openEditor();
+            }
+            
             // Create AI message with flowchart reference
             aiMessage = {
               role: "model",
               parts: [
-                { text: `I've created a flowchart for you: "${flowchartData.title}". You can open the editor to view and modify it.` },
+                { text: isEditorOpen 
+                  ? `I've updated your flowchart: "${flowchartData.title}". You can see the changes in the editor on the right.`
+                  : `I've created a flowchart for you: "${flowchartData.title}". The editor is now open on the right so you can view and modify it. You can continue chatting here to make further changes!`
+                },
                 { flowchart: flowchartData, chartId }
               ]
             };
@@ -231,8 +239,8 @@ function AppContent() {
           deleteChat={deleteChat}
         />
 
-        {/* Main Content */}
-        <div className="flex-1 h-full flex flex-col justify-start items-center bg-white bg-opacity-5 backdrop-blur-3xl shadow-[inset_0px_30px_600px_rgba(255,255,255,.01)]">
+        {/* Main Content - adjusts width when editor is open */}
+        <div className={`h-full flex flex-col justify-start items-center ${isEditorOpen ? 'w-1/2' : 'w-full'}`}>
           {history.length === 0 && !loading ? (
             <WelcomeScreen
               inputText={inputText}
@@ -285,10 +293,14 @@ function AppContent() {
             />
           )}
         </div>
+
+        {/* Flow Chart Editor - appears as sibling in flex layout */}
+        {isEditorOpen && (
+          <div className="h-full bg-black w-1/2">
+            <FlowChartEditor />
+          </div>
+        )}
       </div>
-      
-      {/* Flow Chart Editor */}
-      <FlowChartEditor />
     </div>
   );
 }
