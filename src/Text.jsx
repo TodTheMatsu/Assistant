@@ -3,10 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useState } from 'react';
 import FlowChartManager from './components/FlowChartManager.jsx';
-import { useFlowChart } from './FlowChartContext.jsx';
 
 function Text({ result, parts, role, loading }) {
-  const { openEditor, setActiveFlowChart } = useFlowChart();
   const delayTime = loading ? 0.5 : 0.2;
 
   // Use parts if provided, otherwise fall back to result for backward compatibility
@@ -283,20 +281,6 @@ function Text({ result, parts, role, loading }) {
                   >
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="text-sm font-medium text-white/80">Flow Chart</h4>
-                      <button
-                        onClick={() => {
-                          if (part.chartId) {
-                            setActiveFlowChart(part.chartId);
-                          }
-                          openEditor();
-                        }}
-                        className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors flex items-center space-x-1"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        <span>Open Editor</span>
-                      </button>
                     </div>
                     <FlowChartManager 
                       flowcharts={[part.flowchart]} 

@@ -7,6 +7,7 @@ const WelcomeScreen = ({
   handlePaste,
   fetchAIResponse,
   loading,
+  retryAttempt,
   selectedFiles,
   handleFileSelect,
   removeFile,
@@ -112,9 +113,8 @@ const WelcomeScreen = ({
           <div className="relative w-full max-w-2xl">
             <div className="bg-white bg-opacity-20 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:shadow-2xl focus-within:shadow-blue-500/20 transition-all duration-300">
               <div className="relative">
-                <motion.input
+                <motion.textarea
                   ref={inputRef}
-                  type="text"
                   value={inputText}
                   onChange={handleChange}
                   onPaste={handlePaste}
@@ -124,10 +124,17 @@ const WelcomeScreen = ({
                       fetchAIResponse(e);
                     }
                   }}
-                  placeholder="Enter text or paste images"
+                  placeholder="Enter text or paste images/code..."
+                  rows={inputText.split('\n').length > 3 ? Math.min(inputText.split('\n').length, 8) : 3}
                   initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
                   transition={{ duration: 0.2, ease: "linear" }}
-                  className={`w-full bg-transparent text-left text-xl px-6 py-4 text-white rounded-t-2xl focus:outline-none placeholder:text-lg placeholder:text-white placeholder:text-opacity-50 ${useSearch ? 'pr-32' : ''}`}
+                  className={`w-full bg-transparent text-left text-xl px-6 py-4 text-white rounded-t-2xl focus:outline-none placeholder:text-lg placeholder:text-white placeholder:text-opacity-50 resize-none overflow-y-auto leading-relaxed ${useSearch ? 'pr-32' : ''}`}
+                  style={{ 
+                    minHeight: '60px', 
+                    maxHeight: '300px',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word'
+                  }}
                 />
               </div>
               
@@ -337,7 +344,9 @@ const WelcomeScreen = ({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                       </motion.div>
-                      <span className="text-sm font-medium">Sending...</span>
+                      <span className="text-sm font-medium">
+                        {retryAttempt > 0 ? `Retrying... (${retryAttempt + 1}/3)` : 'Sending...'}
+                      </span>
                     </>
                   ) : (
                     <>

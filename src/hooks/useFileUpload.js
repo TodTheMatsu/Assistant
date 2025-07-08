@@ -41,12 +41,12 @@ export const useFileUpload = () => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
+    // Check for images first
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       
-      // Check if the item is an image
       if (item.type.startsWith('image/')) {
-        e.preventDefault(); // Prevent default paste behavior
+        e.preventDefault(); // Prevent default paste behavior for images
         
         const file = item.getAsFile();
         if (file) {
@@ -63,9 +63,12 @@ export const useFileUpload = () => {
           };
           reader.readAsDataURL(file);
         }
-        break;
+        return; // Exit early if we found an image
       }
     }
+    
+    // For text content, we'll let the default paste behavior handle it
+    // The textarea will naturally preserve formatting
   }, []);
 
   const removeFile = useCallback((index) => {

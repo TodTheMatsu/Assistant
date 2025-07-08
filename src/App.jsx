@@ -49,6 +49,7 @@ function AppContent() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activeMode, setActiveMode] = useState(null); // null = no mode, 'search' = search mode
+  const [retryAttempt, setRetryAttempt] = useState(0); // Track retry attempts
   
   // Refs
   const resultsRef = useRef(null);
@@ -107,6 +108,80 @@ function AppContent() {
     }
   }, [currentChatIndex, onExistingChat, setCurrentChat]);
 
+  // Helper function to detect if a function call should have been made
+  const shouldHaveCalledFunction = (userMessage, aiResponse) => {
+    const userText = userMessage.parts.map(part => part.text).join(' ').toLowerCase();
+    const aiText = aiResponse.toLowerCase();
+    
+    // Check for flowchart-related keywords in user message
+    const flowchartKeywords = [
+      'flowchart', 'flow chart', 'diagram', 'process', 'workflow', 'chart',
+      'visualize', 'visual', 'show me', 'create', 'draw', 'steps',
+      'process flow', 'decision tree', 'algorithm', 'procedure'
+    ];
+    
+    const hasFlowchartKeywords = flowchartKeywords.some(keyword => 
+      userText.includes(keyword)
+    );
+    
+    // Check if AI response mentions creating/making something visual but no function was called
+    const aiMentionsCreation = aiText.includes('create') || aiText.includes('make') || 
+                              aiText.includes('generate') || aiText.includes('show') ||
+                              aiText.includes('diagram') || aiText.includes('flowchart');
+    
+    return hasFlowchartKeywords && aiMentionsCreation;
+  };
+
+  // Enhanced AI request with retry logic
+  const callAIWithRetry = async (messageParts, useSearch, currentFlowChart, history, retryCount = 0) => {
+    const maxRetries = 2;
+    
+    try {
+      // Update retry attempt state for UI feedback
+      setRetryAttempt(retryCount);
+      
+      // Add retry context to message if this is a retry
+      let enhancedParts = [...messageParts];
+      if (retryCount > 0) {
+        enhancedParts.push({
+          text: `\n\n[IMPORTANT: This is a retry. The user's request seems to need a function call (like creating a flowchart). Please use the available functions if appropriate. Don't just describe what you would do - actually call the function.]`
+        });
+      }
+      
+      const response = await aiService.generateResponse(
+        enhancedParts,
+        useSearch,
+        currentFlowChart,
+        history
+      );
+      
+      if (response.success) {
+        // Check if we should have called a function but didn't
+        if (!response.functionCalls || response.functionCalls.length === 0) {
+          const userMessage = { parts: messageParts };
+          const aiResponseText = response.result.response.text();
+          
+          if (shouldHaveCalledFunction(userMessage, aiResponseText) && retryCount < maxRetries) {
+            console.log(`Retrying AI request (attempt ${retryCount + 1}/${maxRetries + 1}) - function call expected but not made`);
+            return await callAIWithRetry(messageParts, useSearch, currentFlowChart, history, retryCount + 1);
+          }
+        }
+      }
+      
+      // Reset retry attempt when successful
+      setRetryAttempt(0);
+      return response;
+    } catch (error) {
+      if (retryCount < maxRetries) {
+        console.log(`Retrying AI request (attempt ${retryCount + 1}/${maxRetries + 1}) - error occurred:`, error.message);
+        return await callAIWithRetry(messageParts, useSearch, currentFlowChart, history, retryCount + 1);
+      }
+      // Reset retry attempt on final failure
+      setRetryAttempt(0);
+      throw error;
+    }
+  };
+
   const fetchAIResponse = async (e) => {
     e.preventDefault();
     
@@ -164,8 +239,8 @@ function AppContent() {
       // Get current flowchart for context (always pass it to AI)
       const currentFlowChart = getFlowChartForAI();
       
-      // Generate AI response with simplified parameters
-      const response = await aiService.generateResponse(
+      // Generate AI response with retry logic
+      const response = await callAIWithRetry(
         messageParts,
         useSearch,
         currentFlowChart,
@@ -273,6 +348,7 @@ function AppContent() {
               handlePaste={handlePaste}
               fetchAIResponse={fetchAIResponse}
               loading={loading}
+              retryAttempt={retryAttempt}
               selectedFiles={selectedFiles}
               handleFileSelect={handleFileSelect}
               removeFile={removeFile}
@@ -303,6 +379,7 @@ function AppContent() {
               handlePaste={handlePaste}
               fetchAIResponse={fetchAIResponse}
               loading={loading}
+              retryAttempt={retryAttempt}
               selectedFiles={selectedFiles}
               handleFileSelect={handleFileSelect}
               removeFile={removeFile}
