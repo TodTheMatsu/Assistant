@@ -14,7 +14,7 @@ const ChatInterface = ({ history, loading, resultsRef, useSearch }) => {
         className="w-full flex-1 flex flex-col justify-start items-start rounded-xl overflow-y-auto overflow-x-hidden space-y-5 px-10 py-10 scrollbar scrollbar-thumb-gray-400 scrollbar-corner-white scroll-smooth min-h-0"
       >
         {history.map((entry, index) => (
-          <Text key={index} parts={entry.parts} role={entry.role} index={index} />
+          <Text key={index} parts={entry.parts} role={entry.role} index={index} citations={entry.citations} />
         ))}
         {loading && <Text key="loading" result="Thinking..." role='model' loading={true}/>}
       </motion.div>

@@ -3,11 +3,65 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useState } from 'react';
 
-function Text({ result, parts, role, loading }) {
+function Text({ result, parts, role, loading, citations }) {
   const delayTime = loading ? 0.5 : 0.2;
 
   // Use parts if provided, otherwise fall back to result for backward compatibility
   const messageParts = parts || (result ? [{ text: result }] : []);
+
+  // Function to render text with citations - removes citation markers completely
+  const renderTextWithCitations = (text) => {
+    if (!citations || !text) return text;
+    
+    // Remove citation markers entirely from the text
+    return text.replace(/<cite>(\d+)<\/cite>/g, '');
+  };
+
+  // Function to render citation list at the bottom
+  const renderCitationList = () => {
+    if (!citations || citations.length === 0) return null;
+    
+    // Collect all unique sources across all citations
+    const allUniqueSources = [];
+    const seenUris = new Set();
+    
+    citations.forEach(citation => {
+      citation.sources.forEach(source => {
+        if (!seenUris.has(source.uri)) {
+          seenUris.add(source.uri);
+          allUniqueSources.push(source);
+        }
+      });
+    });
+    
+    return (
+      <div className="mt-6 pt-4 border-t border-white border-opacity-20">
+        <h4 className="text-sm font-medium text-white text-opacity-70 mb-3">Sources:</h4>
+        <div className="flex flex-wrap gap-2">
+          {allUniqueSources.map((source, sourceIndex) => (
+            <a
+              key={sourceIndex}
+              href={source.uri}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center font-semibold space-x-2 text-blue-500 bg-white/20 hover:scale-105 hover:text-blue-400 transition-colors duration-200 text-sm outline outline-1 rounded-md p-2"
+              title={source.uri}
+            >
+              {source.faviconUrl && (
+                <img 
+                  src={source.faviconUrl} 
+                  alt="" 
+                  className="w-4 h-4"
+                  onError={(e) => e.target.style.display = 'none'}
+                />
+              )}
+              <span>{source.title}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const customRenderers = {
     h1: ({ children }) => <h1 className="text-3xl font-bold mb-2">{children}</h1>,
@@ -34,22 +88,9 @@ function Text({ result, parts, role, loading }) {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center text-green-500 hover:text-green-400 transition-colors duration-200"
+        className="inline-flex items-center text-blue-500 hover:text-blue-400 transition-colors duration-200"
         title={href}
       >
-        <svg 
-          className="w-4 h-4 mr-1" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-          />
-        </svg>
         {children}
       </a>
     ),
@@ -232,7 +273,7 @@ function Text({ result, parts, role, loading }) {
                     remarkPlugins={[remarkGfm]} 
                     components={customRenderers} 
                   >
-                    {part.text}
+                    {renderTextWithCitations(part.text)}
                   </ReactMarkdown>
                 )}
                 {part.inlineData && (
@@ -273,9 +314,12 @@ function Text({ result, parts, role, loading }) {
                 )}
               </div>
             ))}
+            {renderCitationList()}
           </motion.div>
         </motion.div>
       )}
+
+
     </div>
   );
 }

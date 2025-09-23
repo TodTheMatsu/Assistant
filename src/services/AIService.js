@@ -29,6 +29,46 @@ class AIService {
     })).filter(entry => entry.parts.length > 0); // Remove entries with no valid parts
   }
 
+  addCitations(response) {
+    let text = response.text();
+    const supports = response.candidates[0]?.groundingMetadata?.groundingSupports;
+    const chunks = response.candidates[0]?.groundingMetadata?.groundingChunks;
+
+    if (!supports || !chunks) return text;
+
+    // Sort supports by end_index in descending order to avoid shifting issues when inserting.
+    const sortedSupports = [...supports].sort(
+      (a, b) => (b.segment?.endIndex ?? 0) - (a.segment?.endIndex ?? 0),
+    );
+
+    for (const support of sortedSupports) {
+      const endIndex = support.segment?.endIndex;
+      if (endIndex === undefined || !support.groundingChunkIndices?.length) {
+        continue;
+      }
+
+      const citationLinks = support.groundingChunkIndices
+        .map(i => {
+          const uri = chunks[i]?.web?.uri;
+          const title = chunks[i]?.web?.title;
+          if (uri) {
+            const domain = title && title.includes('.') ? title : new URL(uri).hostname;
+            const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
+            return `![${domain}](${faviconUrl}) [${i + 1}](${uri})`;
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      if (citationLinks.length > 0) {
+        const citationString = citationLinks.join(", ");
+        text = text.slice(0, endIndex) + " " + citationString + text.slice(endIndex);
+      }
+    }
+
+    return text;
+  }
+
   async generateTitle(history) {
     try {
       const textOnlyHistory = history.filter(entry => entry.role === 'user' || entry.role === 'model')
@@ -61,9 +101,57 @@ class AIService {
 
       const result = await chat.sendMessage(processedParts);
       
+      // Get the response text and process citations
+      let text = result.response.text();
+      let citations = null;
+      
+      if (useSearch) {
+        const supports = result.response.candidates[0]?.groundingMetadata?.groundingSupports;
+        const chunks = result.response.candidates[0]?.groundingMetadata?.groundingChunks;
+        
+        if (supports && chunks) {
+          // Sort supports by end_index in descending order to avoid shifting issues
+          const sortedSupports = [...supports].sort(
+            (a, b) => (b.segment?.endIndex ?? 0) - (a.segment?.endIndex ?? 0)
+          );
+          
+          citations = [];
+          let citationCounter = 1;
+          
+          for (const support of sortedSupports) {
+            const endIndex = support.segment?.endIndex;
+            if (endIndex === undefined || !support.groundingChunkIndices?.length) {
+              continue;
+            }
+            
+            const sources = support.groundingChunkIndices
+              .map(i => ({
+                title: chunks[i]?.web?.title,
+                uri: chunks[i]?.web?.uri,
+                faviconUrl: chunks[i]?.web?.title ? `https://www.google.com/s2/favicons?domain=${chunks[i].web.title}&sz=16` : null
+              }))
+              .filter(source => source.uri);
+            
+            if (sources.length > 0) {
+              // Insert citation marker in text
+              const citationMarker = `<cite>${citationCounter}</cite>`;
+              text = text.slice(0, endIndex) + citationMarker + text.slice(endIndex);
+              
+              citations.push({
+                id: citationCounter,
+                sources: sources
+              });
+              
+              citationCounter++;
+            }
+          }
+        }
+      }
+      
       return {
         success: true,
-        result: result,
+        text: text,
+        citations: citations,
         functionCalls: result.response.functionCalls ? result.response.functionCalls() : null
       };
     } catch (error) {

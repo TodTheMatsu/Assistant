@@ -131,7 +131,7 @@ function AppContent() {
         // Check if we should have called a function but didn't
         if (!response.functionCalls || response.functionCalls.length === 0) {
           const userMessage = { parts: messageParts };
-          const aiResponseText = response.result.response.text();
+          const aiResponseText = response.text;
           
           if (shouldHaveCalledFunction(userMessage, aiResponseText) && retryCount < maxRetries) {
             console.log(`Retrying AI request (attempt ${retryCount + 1}/${maxRetries + 1}) - function call expected but not made`);
@@ -225,7 +225,11 @@ function AppContent() {
           aiMessage = { role: "model", parts: [{ text: "Function call completed." }] };
         } else {
           // Regular text response
-          aiMessage = { role: "model", parts: [{ text: response.result.response.text() }] };
+          aiMessage = { 
+            role: "model", 
+            parts: [{ text: response.text }],
+            citations: response.citations || null
+          };
         }
         
         // Add AI response to history and save
