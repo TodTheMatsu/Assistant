@@ -51,7 +51,7 @@ function Text({ result, parts, role, loading, citations }) {
                 <img 
                   src={source.faviconUrl} 
                   alt="" 
-                  className="w-4 h-4"
+                  className="w-4 h-4 bg-white rounded-md p-0.5"
                   onError={(e) => e.target.style.display = 'none'}
                 />
               )}

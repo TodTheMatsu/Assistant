@@ -10,7 +10,25 @@ class AIService {
     // Create separate models for different use cases
     this.regularModel = this.genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      systemInstruction: "You are a helpful AI assistant, your name is Assistant. Do not mention that you are trained by Google or built by Google."
+      systemInstruction: "You are a helpful AI assistant, your name is Assistant. Do not mention that you are trained by Google or built by Google.",
+      tools: [
+        {functionDeclarations: [{
+          name: "use_search_model",
+          description: "Switch to the search-enabled model for queries that require real-time information, current events, or external data that isn't in your training knowledge.",
+          parameters: {
+            type: "object",
+            properties: {
+              reason: {
+                type: "string",
+                description: "Brief explanation of why search is needed for this query"
+              }
+            },
+            required: ["reason"]
+          }
+        }],
+      },
+    ],
+      
     });
     
     this.searchModel = this.genAI.getGenerativeModel({
@@ -87,27 +105,25 @@ class AIService {
     }
   }
 
-  async generateResponse(messageParts, useSearch = false, history = []) {
+  async generateResponse(messageParts, history = [], forceSearch = false) {
     try {
       // Prepare the message parts
       const processedParts = [...messageParts];
 
-      // Choose model based on search mode
-      const selectedModel = useSearch ? this.searchModel : this.regularModel;
-
-      const chat = selectedModel.startChat({ 
-        history: this.cleanHistoryForAI(history) 
-      });
-
-      const result = await chat.sendMessage(processedParts);
-      
-      // Get the response text and process citations
-      let text = result.response.text();
-      let citations = null;
-      
-      if (useSearch) {
-        const supports = result.response.candidates[0]?.groundingMetadata?.groundingSupports;
-        const chunks = result.response.candidates[0]?.groundingMetadata?.groundingChunks;
+      // If search is forced, skip function calling and use search model directly
+      if (forceSearch) {
+        const searchChat = this.searchModel.startChat({ 
+          history: this.cleanHistoryForAI(history) 
+        });
+        
+        const searchResult = await searchChat.sendMessage(processedParts);
+        
+        // Process search response with citations
+        let text = searchResult.response.text();
+        let citations = null;
+        
+        const supports = searchResult.response.candidates[0]?.groundingMetadata?.groundingSupports;
+        const chunks = searchResult.response.candidates[0]?.groundingMetadata?.groundingChunks;
         
         if (supports && chunks) {
           // Sort supports by end_index in descending order to avoid shifting issues
@@ -146,13 +162,97 @@ class AIService {
             }
           }
         }
+        
+        return {
+          success: true,
+          text: text,
+          citations: citations,
+          usedSearch: true,
+          functionCalls: null
+        };
+      }
+
+      // Start with the regular model that can call functions
+      const chat = this.regularModel.startChat({ 
+        history: this.cleanHistoryForAI(history) 
+      });
+
+      const result = await chat.sendMessage(processedParts);
+      
+      // Check if the model wants to use search
+      const functionCalls = result.response.functionCalls();
+      if (functionCalls && functionCalls.length > 0) {
+        const searchCall = functionCalls.find(call => call.name === 'use_search_model');
+        if (searchCall) {
+          // Switch to search model and regenerate response
+          const searchChat = this.searchModel.startChat({ 
+            history: this.cleanHistoryForAI(history) 
+          });
+          
+          const searchResult = await searchChat.sendMessage(processedParts);
+          
+          // Process search response with citations
+          let text = searchResult.response.text();
+          let citations = null;
+          
+          const supports = searchResult.response.candidates[0]?.groundingMetadata?.groundingSupports;
+          const chunks = searchResult.response.candidates[0]?.groundingMetadata?.groundingChunks;
+          
+          if (supports && chunks) {
+            // Sort supports by end_index in descending order to avoid shifting issues
+            const sortedSupports = [...supports].sort(
+              (a, b) => (b.segment?.endIndex ?? 0) - (a.segment?.endIndex ?? 0)
+            );
+            
+            citations = [];
+            let citationCounter = 1;
+            
+            for (const support of sortedSupports) {
+              const endIndex = support.segment?.endIndex;
+              if (endIndex === undefined || !support.groundingChunkIndices?.length) {
+                continue;
+              }
+              
+              const sources = support.groundingChunkIndices
+                .map(i => ({
+                  title: chunks[i]?.web?.title,
+                  uri: chunks[i]?.web?.uri,
+                  faviconUrl: chunks[i]?.web?.title ? `https://www.google.com/s2/favicons?domain=${chunks[i].web.title}&sz=16` : null
+                }))
+                .filter(source => source.uri);
+              
+              if (sources.length > 0) {
+                // Insert citation marker in text
+                const citationMarker = `<cite>${citationCounter}</cite>`;
+                text = text.slice(0, endIndex) + citationMarker + text.slice(endIndex);
+                
+                citations.push({
+                  id: citationCounter,
+                  sources: sources
+                });
+                
+                citationCounter++;
+              }
+            }
+          }
+          
+          return {
+            success: true,
+            text: text,
+            citations: citations,
+            usedSearch: true,
+            functionCalls: null
+          };
+        }
       }
       
+      // Use the regular model response
       return {
         success: true,
-        text: text,
-        citations: citations,
-        functionCalls: result.response.functionCalls ? result.response.functionCalls() : null
+        text: result.response.text(),
+        citations: null,
+        usedSearch: false,
+        functionCalls: functionCalls
       };
     } catch (error) {
       console.error("Error generating AI response:", error);

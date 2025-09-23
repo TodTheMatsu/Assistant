@@ -123,8 +123,8 @@ function AppContent() {
       
       const response = await aiService.generateResponse(
         enhancedParts,
-        useSearch,
-        history
+        history,
+        useSearch
       );
       
       if (response.success) {
