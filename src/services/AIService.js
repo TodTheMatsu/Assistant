@@ -10,78 +10,14 @@ class AIService {
     // Create separate models for different use cases
     this.regularModel = this.genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      tools: [{ functionDeclarations: [this.getFlowchartFunction()] }]
+      systemInstruction: "You are a helpful AI assistant, your name is Assistant. Do not mention that you are trained by Google or built by Google."
     });
     
     this.searchModel = this.genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      tools: [{ googleSearch: {} }]
+      tools: [{ googleSearch: {} }],
+      systemInstruction: "You are a helpful AI assistant with access to search tools, your name is Assistant. Do not mention that you are trained by Google or built by Google."
     });
-  }
-
-  getFlowchartFunction() {
-    return {
-      name: "createFlowchart",
-      description: "Creates or modifies a flowchart diagram from the provided nodes and connections. Use this when the user asks for a flowchart, process diagram, workflow, visual representation of steps, or wants to modify an existing flowchart. If there's an existing flowchart context provided, modify it according to the user's request.",
-      parameters: {
-        type: "object",
-        properties: {
-          title: {
-            type: "string",
-            description: "Title of the flowchart"
-          },
-          description: {
-            type: "string",
-            description: "Brief description of what the flowchart represents"
-          },
-          nodes: {
-            type: "array",
-            description: "Array of nodes in the flowchart",
-            items: {
-              type: "object",
-              properties: {
-                id: { type: "string", description: "Unique identifier for the node" },
-                type: { 
-                  type: "string", 
-                  enum: ["start", "end", "process", "decision", "data"],
-                  description: "Type of node: start (green oval), end (red oval), process (blue rectangle), decision (yellow diamond), data (orange parallelogram)"
-                },
-                position: {
-                  type: "object",
-                  properties: {
-                    x: { type: "number", description: "X coordinate" },
-                    y: { type: "number", description: "Y coordinate" }
-                  }
-                },
-                data: {
-                  type: "object",
-                  properties: {
-                    label: { type: "string", description: "Text label for the node" }
-                  }
-                }
-              },
-              required: ["id", "type", "position", "data"]
-            }
-          },
-          edges: {
-            type: "array",
-            description: "Array of connections between nodes",
-            items: {
-              type: "object",
-              properties: {
-                id: { type: "string", description: "Unique identifier for the edge" },
-                source: { type: "string", description: "ID of source node" },
-                target: { type: "string", description: "ID of target node" },
-                label: { type: "string", description: "Optional label for the edge" },
-                animated: { type: "boolean", description: "Whether edge should be animated" }
-              },
-              required: ["id", "source", "target"]
-            }
-          }
-        },
-        required: ["title", "nodes", "edges"]
-      }
-    };
   }
 
   cleanHistoryForAI(history) {
@@ -107,21 +43,14 @@ class AIService {
       return result.response.text();
     } catch (error) {
       console.error("Error generating AI content:", error);
-      return "Untitled Chat";
+      return "Untitled Chat"; 
     }
   }
 
-  async generateResponse(messageParts, useSearch = false, currentFlowChart = null, history = []) {
+  async generateResponse(messageParts, useSearch = false, history = []) {
     try {
-      // Prepare the message parts with flowchart context if needed
+      // Prepare the message parts
       const processedParts = [...messageParts];
-      
-      // Always include flowchart context if available (only when not in search mode)
-      if (currentFlowChart && !useSearch) {
-        processedParts.push({
-          text: `\n\n[Current FlowChart Context]\nTitle: ${currentFlowChart.title}\nDescription: ${currentFlowChart.description}\nNodes: ${JSON.stringify(currentFlowChart.nodes)}\nEdges: ${JSON.stringify(currentFlowChart.edges)}\n\nYou can modify this existing flowchart if the user's request relates to it.`
-        });
-      }
 
       // Choose model based on search mode
       const selectedModel = useSearch ? this.searchModel : this.regularModel;

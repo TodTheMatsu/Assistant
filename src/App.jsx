@@ -1,8 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import Text from "./Text.jsx";
-import { FlowChartProvider, useFlowChart } from "./FlowChartContext.jsx";
-import FlowChartEditor from "./components/FlowChartEditor.jsx";
 
 // Import new components
 import Sidebar from "./components/ui/Sidebar.jsx";
@@ -17,8 +13,6 @@ import { getFileIcon } from "./utils/fileUtils.js";
 import AIService from "./services/AIService.js";
 
 function AppContent() {
-  const { handleAIModification, getFlowChartForAI, openEditor, isEditorOpen, setCurrentChat } = useFlowChart();
-  
   // Use custom hooks
   const {
     selectedFiles,
@@ -37,7 +31,6 @@ function AppContent() {
     loading,
     setLoading,
     updateHistory,
-    addToHistory,
     createChat,
     loadChat,
     deleteChat,
@@ -78,35 +71,15 @@ function AppContent() {
   // Enhanced chat functions that also handle flowchart context
   const handleCreateChat = useCallback(async () => {
     await createChat();
-    // Set up new chat in flowchart context
-    const newChatId = `chat_${Date.now()}`;
-    setCurrentChat(newChatId);
-  }, [createChat, setCurrentChat]);
+  }, [createChat]);
 
   const handleLoadChat = useCallback((chat, index) => {
     loadChat(chat, index);
-    // Set up existing chat in flowchart context
-    const chatId = `chat_${index}`;
-    setCurrentChat(chatId);
-  }, [loadChat, setCurrentChat]);
+  }, [loadChat]);
 
   const handleDeleteChat = useCallback((indexToDelete, e) => {
     deleteChat(indexToDelete, e);
-    // Note: FlowChart context automatically handles cleanup when switching chats
   }, [deleteChat]);
-
-  // Initialize flowchart context with initial chat
-  useEffect(() => {
-    if (currentChatIndex === -1 && !onExistingChat) {
-      // This is a new chat session
-      const initialChatId = `chat_${Date.now()}`;
-      setCurrentChat(initialChatId);
-    } else if (currentChatIndex >= 0) {
-      // We're on an existing chat
-      const chatId = `chat_${currentChatIndex}`;
-      setCurrentChat(chatId);
-    }
-  }, [currentChatIndex, onExistingChat, setCurrentChat]);
 
   // Helper function to detect if a function call should have been made
   const shouldHaveCalledFunction = (userMessage, aiResponse) => {
@@ -151,7 +124,6 @@ function AppContent() {
       const response = await aiService.generateResponse(
         enhancedParts,
         useSearch,
-        currentFlowChart,
         history
       );
       
@@ -236,14 +208,11 @@ function AppContent() {
       setInput("");
       clearFiles();
       
-      // Get current flowchart for context (always pass it to AI)
-      const currentFlowChart = getFlowChartForAI();
-      
       // Generate AI response with retry logic
       const response = await callAIWithRetry(
         messageParts,
         useSearch,
-        currentFlowChart,
+        null,
         history
       );
       
@@ -252,34 +221,8 @@ function AppContent() {
         
         // Handle function calls (for flowcharts)
         if (response.functionCalls && response.functionCalls.length > 0) {
-          const functionCall = response.functionCalls[0];
-          
-          if (functionCall.name === 'createFlowchart') {
-            const flowchartData = functionCall.args;
-            
-            // Handle AI flowchart creation/modification using context
-            const chartId = handleAIModification(flowchartData);
-            
-            // Automatically open the flowchart editor if it's not already open
-            if (!isEditorOpen) {
-              openEditor();
-            }
-            
-            // Create AI message with flowchart reference
-            aiMessage = {
-              role: "model",
-              parts: [
-                { text: isEditorOpen 
-                  ? `I've updated your flowchart: "${flowchartData.title}". You can see the changes in the editor on the right.`
-                  : `I've created a flowchart for you: "${flowchartData.title}". The editor is now open on the right so you can view and modify it. You can continue chatting here to make further changes!`
-                },
-                { flowchart: flowchartData, chartId }
-              ]
-            };
-          } else {
-            // Handle other function calls if any
-            aiMessage = { role: "model", parts: [{ text: "Function call completed." }] };
-          }
+          // Handle other function calls if any
+          aiMessage = { role: "model", parts: [{ text: "Function call completed." }] };
         } else {
           // Regular text response
           aiMessage = { role: "model", parts: [{ text: response.result.response.text() }] };
@@ -340,7 +283,7 @@ function AppContent() {
         />
 
         {/* Main Content - adjusts width when editor is open */}
-        <div className={`h-full flex flex-col justify-start items-center ${isEditorOpen ? 'w-1/2' : 'w-full'}`}>
+        <div className={`h-full flex flex-col justify-start items-center w-full`}>
           {history.length === 0 && !loading ? (
             <WelcomeScreen
               inputText={inputText}
@@ -357,7 +300,6 @@ function AppContent() {
               setDropdownOpen={setDropdownOpen}
               toggleMode={toggleMode}
               useSearch={useSearch}
-              openEditor={openEditor}
               inputRef={inputRef}
               fileInputRef={fileInputRef}
               dropdownRef={dropdownRef}
@@ -388,20 +330,12 @@ function AppContent() {
               setDropdownOpen={setDropdownOpen}
               toggleMode={toggleMode}
               useSearch={useSearch}
-              openEditor={openEditor}
               inputRef={inputRef}
               fileInputRef={fileInputRef}
               dropdownRef2={dropdownRef2}
             />
           )}
         </div>
-
-        {/* Flow Chart Editor - appears as sibling in flex layout */}
-        {isEditorOpen && (
-          <div className="h-full bg-black w-1/2">
-            <FlowChartEditor />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -409,9 +343,7 @@ function AppContent() {
 
 function App() {
   return (
-    <FlowChartProvider>
-      <AppContent />
-    </FlowChartProvider>
+    <AppContent />
   );
 }
 

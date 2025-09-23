@@ -16,7 +16,6 @@ const WelcomeScreen = ({
   setDropdownOpen,
   toggleMode,
   useSearch,
-  openEditor,
   inputRef,
   fileInputRef,
   dropdownRef
@@ -276,26 +275,7 @@ const WelcomeScreen = ({
                                 className="w-2 h-2 bg-blue-400 rounded-full ml-auto"
                               />
                             )}
-                          </motion.button>
-
-                          {/* Divider */}
-                          <div className="h-px bg-white/20"></div>
-
-                          {/* Open Editor Item */}
-                          <motion.button
-                            type="button"
-                            onClick={() => {
-                              openEditor();
-                              setDropdownOpen(false);
-                            }}
-                            className="w-full flex items-center space-x-3 px-4 py-3 text-white/70 hover:bg-white/10 hover:text-white/90 transition-all duration-200"
-                            whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
-                          >
-                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            <span className="text-sm font-medium">Open Flowchart Editor</span>
-                          </motion.button>
+                          </motion.button> 
                         </motion.div>
                       )}
                     </AnimatePresence>

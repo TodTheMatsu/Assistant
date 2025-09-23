@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useState } from 'react';
-import FlowChartManager from './components/FlowChartManager.jsx';
 
 function Text({ result, parts, role, loading }) {
   const delayTime = loading ? 0.5 : 0.2;
@@ -270,22 +269,6 @@ function Text({ result, parts, role, loading }) {
                         {part.fileInfo.type} • {(part.fileInfo.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
-                  </motion.div>
-                )}
-                {part.flowchart && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: delayTime + 0.1 }}
-                    className="mt-4"
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-sm font-medium text-white/80">Flow Chart</h4>
-                    </div>
-                    <FlowChartManager 
-                      flowcharts={[part.flowchart]} 
-                      onFlowchartUpdate={() => {}}
-                    />
                   </motion.div>
                 )}
               </div>
