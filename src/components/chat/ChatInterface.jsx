@@ -11,7 +11,7 @@ const ChatInterface = ({ history, loading, resultsRef, useSearch }) => {
     >      
       <motion.div
         ref={resultsRef}
-        className="w-full flex-1 flex flex-col justify-start items-start rounded-xl overflow-y-auto overflow-x-hidden space-y-5 px-10 py-10 scrollbar scrollbar-thumb-gray-400 scrollbar-corner-white scroll-smooth min-h-0"
+        className="w-full flex-1 flex flex-col justify-start items-start rounded-xl overflow-y-auto overflow-x-hidden space-y-5 px-10 py-10 scrollbar scrollbar-thumb-sage scrollbar-corner-dark-charcoal scroll-smooth min-h-0"
       >
         {history.map((entry, index) => (
           <Text 

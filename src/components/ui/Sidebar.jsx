@@ -14,7 +14,7 @@ const Sidebar = ({
       {/* Sidebar Toggle Button */}
       <motion.button
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="fixed top-4 left-4 z-20 bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-white p-2 rounded-lg transition-all duration-200"
+        className="fixed top-4 left-4 z-20 bg-dark-gray bg-opacity-80 hover:bg-opacity-90 backdrop-blur-sm text-light-beige p-2 rounded-lg transition-all duration-200"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -40,12 +40,12 @@ const Sidebar = ({
           opacity: sidebarCollapsed ? 0 : 1
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="bg-white border-r-2 border-white border-opacity-30 bg-opacity-10 h-full flex flex-col justify-start items-center overflow-hidden"
+        className="bg-dark-gray border-r-2 border-sage border-opacity-30 h-full flex flex-col justify-start items-center overflow-hidden"
       >
         <div className="w-full flex flex-col items-center pt-16 px-4 h-full">
           {/* Logo/Icon */}
           <div className="mb-4 flex-shrink-0">
-            <svg fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 stroke-white" viewBox="0 0 20 20">
+            <svg fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 stroke-light-beige" viewBox="0 0 20 20">
               <motion.path 
                 initial={{ pathLength: 0, fill: "none" }} 
                 animate={{ pathLength: 1 }}
@@ -61,13 +61,13 @@ const Sidebar = ({
               initial={{ scale: 1 }} 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full text-white py-3 px-4 hover:bg-opacity-20 rounded-xl bg-white bg-opacity-10 border border-white border-opacity-20 transition-all duration-200"
+              className="w-full text-light-beige py-3 px-4 hover:bg-sage hover:bg-opacity-40 rounded-xl bg-sage bg-opacity-20 border border-sage border-opacity-30 transition-all duration-200"
             >
               <span className="text-sm font-medium">+ New Chat</span>
             </motion.button>
           </div>
           
-          <h1 className="text-lg text-white font-thin mb-6 whitespace-nowrap flex-shrink-0">Chat History</h1>
+          <h1 className="text-lg text-light-beige font-thin mb-6 whitespace-nowrap flex-shrink-0">Chat History</h1>
           
           {/* Chat History */}
           <div className="w-full flex flex-col gap-2 flex-1 overflow-x-hidden overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30 pr-1">
@@ -82,7 +82,7 @@ const Sidebar = ({
                   whileTap={{ scale: 0.98 }}
                 >
                   <button 
-                    className="w-full hover:bg-white hover:bg-opacity-10 py-3 px-3 pr-10 rounded-xl bg-white bg-opacity-5 text-white text-left transition-all duration-200"
+                    className="w-full hover:bg-sage hover:bg-opacity-20 py-3 px-3 pr-10 rounded-xl bg-dark-charcoal bg-opacity-50 text-light-beige text-left transition-all duration-200"
                     onClick={() => loadChat(chat, originalIndex)}
                   >
                     <p className="text-sm truncate">{chat.title}</p>
@@ -114,27 +114,27 @@ const Sidebar = ({
           
           {/* User Account Section */}
           <div className="w-full mt-4 mb-4 flex-shrink-0">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white bg-opacity-5 border border-white border-opacity-10">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-dark-charcoal bg-opacity-50 border border-sage border-opacity-20">
               {/* User Avatar Placeholder */}
-              <div className="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <div className="w-8 h-8 rounded-full bg-sage bg-opacity-30 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-light-beige" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
               </div>
               
               {/* User Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">User</p>
-                <p className="text-xs text-white text-opacity-60 truncate">user@example.com</p>
+                <p className="text-sm font-medium text-light-beige truncate">User</p>
+                <p className="text-xs text-light-beige text-opacity-60 truncate">user@example.com</p>
               </div>
               
               {/* Settings/Options Button */}
               <motion.button 
-                className="p-1 rounded-md hover:bg-white hover:bg-opacity-10 transition-colors duration-200 flex-shrink-0"
+                className="p-1 rounded-md hover:bg-sage hover:bg-opacity-20 transition-colors duration-200 flex-shrink-0"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <svg className="w-4 h-4 text-white text-opacity-60 hover:text-opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-light-beige text-opacity-60 hover:text-opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
               </motion.button>

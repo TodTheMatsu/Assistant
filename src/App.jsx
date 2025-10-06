@@ -281,7 +281,7 @@ function AppContent() {
   };
 
   return (
-    <div className="w-screen h-screen bg-black">
+    <div className="w-screen h-screen bg-dark-charcoal">
       <div className="w-screen h-screen flex flex-row justify-center items-end">
         {/* Sidebar Component */}
         <Sidebar

@@ -7,7 +7,14 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'dark-charcoal': '#1a1a1a',
+        'dark-gray': '#3d3d3d',
+        'sage': '#6b7f6e',
+        'light-beige': '#e8d7c3',
+      },
+    },
   },
   plugins: [
     tailwindscrollbars,

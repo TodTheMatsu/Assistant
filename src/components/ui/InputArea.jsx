@@ -24,7 +24,7 @@ const InputArea = ({
     <div className="w-full flex flex-col justify-center items-center py-5">
       <form className="w-full flex justify-center">
         <div className="relative w-full max-w-2xl">
-          <div className="bg-white bg-opacity-20 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:shadow-2xl focus-within:shadow-blue-500/20 transition-all duration-300">
+          <div className="bg-dark-gray bg-opacity-80 rounded-2xl border-2 border-sage border-opacity-30 focus-within:border-sage focus-within:shadow-2xl focus-within:shadow-sage/20 transition-all duration-300">
             <div className="relative">
               <motion.textarea
                 ref={inputRef}
@@ -41,7 +41,7 @@ const InputArea = ({
                 rows={inputText.split('\n').length > 3 ? Math.min(inputText.split('\n').length, 8) : 3}
                 initial={{ boxShadow: "0px 0px 0px rgba(0, 0, 0, 0)" }}
                 transition={{ duration: 0.2, ease: "linear" }}
-                className="w-full bg-transparent text-left text-xl px-6 py-4 text-white rounded-t-2xl focus:outline-none placeholder:text-lg placeholder:text-white placeholder:text-opacity-50 resize-none overflow-y-auto leading-relaxed"
+                className="w-full bg-transparent text-left text-xl px-6 py-4 text-light-beige rounded-t-2xl focus:outline-none placeholder:text-lg placeholder:text-light-beige placeholder:text-opacity-50 resize-none overflow-y-auto leading-relaxed"
                 style={{ 
                   minHeight: '60px', 
                   maxHeight: '300px',
@@ -53,7 +53,7 @@ const InputArea = ({
             
             {/* File previews */}
             {selectedFiles.length > 0 && (
-              <div className="px-6 py-3 border-t border-white/10">
+              <div className="px-6 py-3 border-t border-sage/20">
                 <div className="flex flex-wrap gap-2">
                   {selectedFiles.map((fileData, index) => (
                     <motion.div
@@ -66,14 +66,14 @@ const InputArea = ({
                         <img
                           src={fileData.preview}
                           alt={fileData.name}
-                          className="w-16 h-16 object-cover rounded-lg border border-white/20"
+                          className="w-16 h-16 object-cover rounded-lg border border-sage/30"
                         />
                       ) : (
-                        <div className="w-16 h-16 bg-white/10 rounded-lg border border-white/20 flex flex-col items-center justify-center p-2">
-                          <div className="text-white/70 mb-1">
+                        <div className="w-16 h-16 bg-sage/10 rounded-lg border border-sage/30 flex flex-col items-center justify-center p-2">
+                          <div className="text-light-beige/70 mb-1">
                             {getFileIcon(fileData.type)}
                           </div>
-                          <div className="text-xs text-white/50 text-center truncate w-full">
+                          <div className="text-xs text-light-beige/50 text-center truncate w-full">
                             {fileData.name.split('.').pop()}
                           </div>
                         </div>
@@ -85,7 +85,7 @@ const InputArea = ({
                         ×
                       </button>
                       {/* File name tooltip on hover */}
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full bg-dark-charcoal/90 text-light-beige text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                         {fileData.name}
                       </div>
                     </motion.div>
@@ -95,7 +95,7 @@ const InputArea = ({
             )}
             
             {/* Bottom section with buttons */}
-            <div className="flex items-center justify-between px-6 py-3 border-t border-white/10">
+            <div className="flex items-center justify-between px-6 py-3 border-t border-sage/20">
               {/* Left side controls */}
               <div className="flex items-center space-x-3">
                 {/* Image upload button */}
@@ -111,7 +111,7 @@ const InputArea = ({
                   />
                   <motion.label
                     htmlFor="file-upload-bottom"
-                    className="relative flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50"
+                    className="relative flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer select-none transition-all duration-300 backdrop-blur-sm overflow-hidden bg-sage/10 text-light-beige/70 border border-sage/30 hover:bg-sage/20 hover:text-light-beige/90 hover:border-sage/50"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     style={{ isolation: 'isolate' }}
@@ -127,7 +127,7 @@ const InputArea = ({
                   <motion.button
                     type="button"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="relative flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 backdrop-blur-sm overflow-hidden bg-white/10 text-white/70 border border-white/30 hover:bg-white/20 hover:text-white/90 hover:border-white/50"
+                    className="relative flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 backdrop-blur-sm overflow-hidden bg-sage/10 text-light-beige/70 border border-sage/30 hover:bg-sage/20 hover:text-light-beige/90 hover:border-sage/50"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     style={{ isolation: 'isolate' }}
@@ -161,7 +161,7 @@ const InputArea = ({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute bottom-full mb-2 left-0 min-w-[200px] bg-black/90 backdrop-blur-md border border-white/30 rounded-xl shadow-lg overflow-hidden z-50"
+                        className="absolute bottom-full mb-2 left-0 min-w-[200px] bg-dark-charcoal/90 backdrop-blur-md border border-sage/30 rounded-xl shadow-lg overflow-hidden z-50"
                         style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
                       >
                         {/* Search Toggle Item */}
@@ -173,10 +173,10 @@ const InputArea = ({
                           }}
                           className={`w-full flex items-center space-x-3 px-4 py-3 transition-all duration-200 ${
                             useSearch 
-                              ? 'bg-blue-500/20 text-blue-200' 
-                              : 'text-white/70 hover:bg-white/10 hover:text-white/90'
+                              ? 'bg-sage/30 text-light-beige' 
+                              : 'text-light-beige/70 hover:bg-sage/10 hover:text-light-beige/90'
                           }`}
-                          whileHover={{ backgroundColor: useSearch ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.15)' }}
+                          whileHover={{ backgroundColor: useSearch ? 'rgba(107, 127, 110, 0.4)' : 'rgba(107, 127, 110, 0.15)' }}
                         >
                           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -186,13 +186,13 @@ const InputArea = ({
                             <motion.div
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
-                              className="w-2 h-2 bg-blue-400 rounded-full ml-auto"
+                              className="w-2 h-2 bg-sage rounded-full ml-auto"
                             />
                           )}
                         </motion.button>
 
                         {/* Divider */}
-                        <div className="h-px bg-white/20"></div>
+                        <div className="h-px bg-sage/20"></div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -205,12 +205,12 @@ const InputArea = ({
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
-                      className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-blue-500/20 border border-blue-400/50"
+                      className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-sage/20 border border-sage/50"
                     >
-                      <svg className="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-light-beige" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                      <span className="text-sm font-medium text-blue-200">Web Search Active</span>
+                      <span className="text-sm font-medium text-light-beige">Web Search Active</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -223,8 +223,8 @@ const InputArea = ({
                 disabled={loading || (!inputText.trim() && selectedFiles.length === 0)}
                 className={`relative flex items-center justify-center px-6 py-2 rounded-xl transition-all duration-300 backdrop-blur-sm overflow-hidden ${
                   loading || (!inputText.trim() && selectedFiles.length === 0)
-                    ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
-                    : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-400/50 hover:shadow-xl hover:shadow-blue-500/40'
+                    ? 'bg-dark-gray/50 text-light-beige/30 cursor-not-allowed border border-sage/20'
+                    : 'bg-gradient-to-r from-sage to-sage/80 text-light-beige shadow-lg shadow-sage/30 border border-sage/50 hover:shadow-xl hover:shadow-sage/40'
                 }`}
                 whileHover={loading || (!inputText.trim() && selectedFiles.length === 0) ? {} : { scale: 1.05 }}
                 whileTap={loading || (!inputText.trim() && selectedFiles.length === 0) ? {} : { scale: 0.95 }}
