@@ -1,50 +1,48 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 class AIService {
   constructor() {
-    this.genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
-    this.initializeModels();
-  }
-
-  initializeModels() {
-    // Create separate models for different use cases
-    this.regularModel = this.genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction: "You are a helpful AI assistant, your name is Assistant. Do not mention that you are trained by Google or built by Google.",
-      tools: [
-        {functionDeclarations: [{
-          name: "use_search_model",
-          description: "Switch to the search-enabled model for queries that require real-time information, current events, or external data that isn't in your training knowledge.",
-          parameters: {
-            type: "object",
-            properties: {
-              reason: {
-                type: "string",
-                description: "Brief explanation of why search is needed for this query"
-              }
-            },
-            required: ["reason"]
-          }
-        }],
-      },
-    ],
-      
-    });
-    
-    this.searchModel = this.genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      tools: [{ googleSearch: {} }],
-      systemInstruction: "You are a helpful AI assistant with access to search tools, your name is Assistant. Do not mention that you are trained by Google or built by Google."
-    });
+    this.genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GOOGLE_API_KEY });
+    this.modelName = "gemini-2.5-flash-lite";
+    this.systemInstruction = "You are a helpful AI assistant, your name is Assistant. Do not mention that you are trained by Google or built by Google.";
   }
 
   cleanHistoryForAI(history) {
     return history.map(entry => ({
       role: entry.role,
+      // Preserve all parts including thought signatures, text, and images
       parts: entry.parts.filter(part => 
-        part.text || part.inlineData // Keep text and images, exclude flowchart data
+        part.text || part.inlineData || part.thoughtSignature // Keep text, images, and thought signatures
       )
     })).filter(entry => entry.parts.length > 0); // Remove entries with no valid parts
+  }
+
+  extractThoughtsAndText(response) {
+    // Extract thought summaries and regular text from response parts
+    let thoughts = [];
+    let text = '';
+    let allParts = [];
+    
+    if (response.candidates && response.candidates[0] && response.candidates[0].content) {
+      const parts = response.candidates[0].content.parts || [];
+      
+      for (const part of parts) {
+        // Preserve all parts for history (including thought signatures)
+        allParts.push(part);
+        
+        if (part.text) {
+          if (part.thought) {
+            // This is a thought summary
+            thoughts.push(part.text);
+          } else {
+            // This is regular response text
+            text += part.text;
+          }
+        }
+      }
+    }
+    
+    return { thoughts, text, allParts };
   }
 
   addCitations(response) {
@@ -97,8 +95,11 @@ class AIService {
         .filter(entry => entry.parts.length > 0);
 
       const prompt = "Generate a short title for the following chat history, you will only give one title and nothing else: " + JSON.stringify(textOnlyHistory);
-      const result = await this.regularModel.generateContent(prompt);
-      return result.response.text();
+      const result = await this.genAI.models.generateContent({
+        model: "gemma-3-27b-it",
+        contents: prompt
+      });
+      return result.text;
     } catch (error) {
       console.error("Error generating AI content:", error);
       return "Untitled Chat"; 
@@ -107,23 +108,54 @@ class AIService {
 
   async generateResponse(messageParts, history = [], forceSearch = false) {
     try {
-      // Prepare the message parts
-      const processedParts = [...messageParts];
-
-      // If search is forced, skip function calling and use search model directly
-      if (forceSearch) {
-        const searchChat = this.searchModel.startChat({ 
-          history: this.cleanHistoryForAI(history) 
+      // Convert parts to the format expected by @google/genai
+      const convertParts = (parts) => {
+        return parts.map(part => {
+          if (part.text) return { text: part.text };
+          if (part.inlineData) return { inlineData: part.inlineData };
+          return part;
         });
+      };
+
+      // Build contents array from history and new message
+      const contents = [
+        ...this.cleanHistoryForAI(history).map(entry => ({
+          role: entry.role,
+          parts: convertParts(entry.parts)
+        })),
+        {
+          role: 'user',
+          parts: convertParts(messageParts)
+        }
+      ];
+
+      // If search is forced, use search model directly
+      if (forceSearch) {
+        console.log('🔍 [AI Service] Forcing search model');
+        const searchResult = await this.genAI.models.generateContent({
+          model: this.modelName,
+          contents: contents,
+          systemInstruction: this.systemInstruction,
+          config: {
+            thinkingConfig: {
+              thinkingBudget: -1,
+              includeThoughts: true
+            },
+            tools: [{ googleSearch: {} }]
+          }
+        });
+        console.log('📥 [AI Service] Raw search response:', JSON.stringify(searchResult, null, 2));
         
-        const searchResult = await searchChat.sendMessage(processedParts);
+        // Extract thoughts and text
+        const { thoughts, text: responseText, allParts } = this.extractThoughtsAndText(searchResult);
+        console.log('🧠 [AI Service] Extracted thoughts:', thoughts);
         
         // Process search response with citations
-        let text = searchResult.response.text();
+        let text = responseText;
         let citations = null;
         
-        const supports = searchResult.response.candidates[0]?.groundingMetadata?.groundingSupports;
-        const chunks = searchResult.response.candidates[0]?.groundingMetadata?.groundingChunks;
+        const supports = searchResult.candidates?.[0]?.groundingMetadata?.groundingSupports;
+        const chunks = searchResult.candidates?.[0]?.groundingMetadata?.groundingChunks;
         
         if (supports && chunks) {
           // Sort supports by end_index in descending order to avoid shifting issues
@@ -163,40 +195,90 @@ class AIService {
           }
         }
         
-        return {
+        const forceSearchResponse = {
           success: true,
           text: text,
           citations: citations,
           usedSearch: true,
-          functionCalls: null
+          functionCalls: null,
+          thoughts: thoughts.length > 0 ? thoughts : null,
+          allParts: allParts, // Include all parts for preserving thought signatures in history
+          usageMetadata: {
+            thoughtsTokenCount: searchResult.usageMetadata?.thoughtsTokenCount || 0,
+            candidatesTokenCount: searchResult.usageMetadata?.candidatesTokenCount || 0,
+            totalTokenCount: searchResult.usageMetadata?.totalTokenCount || 0
+          }
         };
+        console.log('✅ [AI Service] Returning forced search response:', forceSearchResponse);
+        return forceSearchResponse;
       }
 
       // Start with the regular model that can call functions
-      const chat = this.regularModel.startChat({ 
-        history: this.cleanHistoryForAI(history) 
-      });
+      console.log('🤖 [AI Service] Calling regular model with function declarations');
+      const result = await this.genAI.models.generateContent({
+        model: this.modelName,
+        contents: contents,
+        systemInstruction: this.systemInstruction,
+        config: { 
+          thinkingConfig: {
+            thinkingBudget: -1,
+            includeThoughts: true
+          },
+          tools: [
+          {
+            functionDeclarations: [{
+              name: "use_search_model",
+              description: "Switch to the search-enabled model for queries that require real-time information, current events, or external data that isn't in your training knowledge.",
+              parameters: {
+                type: "object",
+                properties: {
+                  reason: {
+                    type: "string",
+                    description: "Brief explanation of why search is needed for this query"
+                  }
+                },
+                required: ["reason"]
+              }
+            }]
+          }
+        ]
+        },
 
-      const result = await chat.sendMessage(processedParts);
+      });
+      console.log('📥 [AI Service] Raw regular model response:', JSON.stringify(result, null, 2));
       
       // Check if the model wants to use search
-      const functionCalls = result.response.functionCalls();
+      const functionCalls = result.functionCalls;
+      console.log('🔧 [AI Service] Function calls detected:', functionCalls);
       if (functionCalls && functionCalls.length > 0) {
         const searchCall = functionCalls.find(call => call.name === 'use_search_model');
         if (searchCall) {
+          console.log('🔄 [AI Service] Switching to search model. Reason:', searchCall.args?.reason);
           // Switch to search model and regenerate response
-          const searchChat = this.searchModel.startChat({ 
-            history: this.cleanHistoryForAI(history) 
+          const searchResult = await this.genAI.models.generateContent({
+            model: this.modelName,
+            contents: contents,
+            systemInstruction: this.systemInstruction,
+       
+            config: { 
+              thinkingConfig: {
+                thinkingBudget: -1,
+                includeThoughts: true
+              },
+              tools: [{ googleSearch: {} }],
+            } 
           });
           
-          const searchResult = await searchChat.sendMessage(processedParts);
+          // Extract thoughts and text
+          const { thoughts: searchThoughts, text: searchResponseText, allParts: searchAllParts } = this.extractThoughtsAndText(searchResult);
+          console.log('🧠 [AI Service] Extracted thoughts from search:', searchThoughts);
           
           // Process search response with citations
-          let text = searchResult.response.text();
+          let text = searchResponseText;
           let citations = null;
           
-          const supports = searchResult.response.candidates[0]?.groundingMetadata?.groundingSupports;
-          const chunks = searchResult.response.candidates[0]?.groundingMetadata?.groundingChunks;
+          const supports = searchResult.candidates?.[0]?.groundingMetadata?.groundingSupports;
+          const chunks = searchResult.candidates?.[0]?.groundingMetadata?.groundingChunks;
           
           if (supports && chunks) {
             // Sort supports by end_index in descending order to avoid shifting issues
@@ -236,24 +318,46 @@ class AIService {
             }
           }
           
-          return {
+          const searchResponse = {
             success: true,
             text: text,
             citations: citations,
             usedSearch: true,
-            functionCalls: null
+            functionCalls: null,
+            thoughts: searchThoughts.length > 0 ? searchThoughts : null,
+            allParts: searchAllParts, // Include all parts for preserving thought signatures in history
+            usageMetadata: {
+              thoughtsTokenCount: searchResult.usageMetadata?.thoughtsTokenCount || 0,
+              candidatesTokenCount: searchResult.usageMetadata?.candidatesTokenCount || 0,
+              totalTokenCount: searchResult.usageMetadata?.totalTokenCount || 0
+            }
           };
+          console.log('✅ [AI Service] Returning search model response:', searchResponse);
+          return searchResponse;
         }
       }
       
+      // Extract thoughts and text from regular response
+      const { thoughts: regularThoughts, text: regularResponseText, allParts: regularAllParts } = this.extractThoughtsAndText(result);
+      console.log('🧠 [AI Service] Extracted thoughts from regular model:', regularThoughts);
+      
       // Use the regular model response
-      return {
+      const regularResponse = {
         success: true,
-        text: result.response.text(),
+        text: regularResponseText,
         citations: null,
         usedSearch: false,
-        functionCalls: functionCalls
+        functionCalls: functionCalls,
+        thoughts: regularThoughts.length > 0 ? regularThoughts : null,
+        allParts: regularAllParts, // Include all parts for preserving thought signatures in history
+        usageMetadata: {
+          thoughtsTokenCount: result.usageMetadata?.thoughtsTokenCount || 0,
+          candidatesTokenCount: result.usageMetadata?.candidatesTokenCount || 0,
+          totalTokenCount: result.usageMetadata?.totalTokenCount || 0
+        }
       };
+      console.log('✅ [AI Service] Returning regular model response:', regularResponse);
+      return regularResponse;
     } catch (error) {
       console.error("Error generating AI response:", error);
       return {

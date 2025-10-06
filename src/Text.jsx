@@ -3,8 +3,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useState } from 'react';
 
-function Text({ result, parts, role, loading, citations }) {
+function Text({ result, parts, role, loading, citations, thoughts, usageMetadata }) {
   const delayTime = loading ? 0.5 : 0.2;
+  const [showThoughts, setShowThoughts] = useState(false);
+  const [sourcesExpanded, setSourcesExpanded] = useState(false);
 
   // Use parts if provided, otherwise fall back to result for backward compatibility
   const messageParts = parts || (result ? [{ text: result }] : []);
@@ -36,28 +38,66 @@ function Text({ result, parts, role, loading, citations }) {
     
     return (
       <div className="mt-6 pt-4 border-t border-white border-opacity-20">
-        <h4 className="text-sm font-medium text-white text-opacity-70 mb-3">Sources:</h4>
-        <div className="flex flex-wrap gap-2">
-          {allUniqueSources.map((source, sourceIndex) => (
-            <a
-              key={sourceIndex}
-              href={source.uri}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center font-semibold space-x-2 text-blue-500 bg-white/20 hover:scale-105 hover:text-blue-400 transition-colors duration-200 text-sm outline outline-1 rounded-md p-2"
-              title={source.uri}
-            >
-              {source.faviconUrl && (
-                <img 
-                  src={source.faviconUrl} 
-                  alt="" 
-                  className="w-4 h-4 bg-white rounded-md p-0.5"
-                  onError={(e) => e.target.style.display = 'none'}
-                />
-              )}
-              <span>{source.title}</span>
-            </a>
-          ))}
+        <button
+          onClick={() => setSourcesExpanded(!sourcesExpanded)}
+          className="flex items-center space-x-2 text-sm font-medium text-white text-opacity-70 hover:text-white hover:text-opacity-90 transition-colors duration-200 mb-3"
+        >
+          <span>Sources ({allUniqueSources.length})</span>
+          <svg
+            className={`w-4 h-4 transform transition-transform duration-200 ${sourcesExpanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div className={`flex flex-wrap gap-2 ${!sourcesExpanded ? 'flex items-center' : ''}`}>
+          {!sourcesExpanded ? (
+            <div className="flex items-center">
+              {allUniqueSources.map((source, sourceIndex) => (
+                <a
+                  key={sourceIndex}
+                  href={source.uri}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center hover:scale-110 hover:z-10 transition-all duration-200 rounded-md p-1.5"
+                  style={{ marginLeft: sourceIndex > 0 ? '-20px' : '0' }}
+                  title={source.title || source.uri}
+                >
+                  {source.faviconUrl && (
+                    <img 
+                      src={source.faviconUrl} 
+                      alt="" 
+                      className="w-5 h-5 bg-white rounded-full p-0.5 flex-shrink-0"
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                  )}
+                </a>
+              ))}
+            </div>
+          ) : (
+            allUniqueSources.map((source, sourceIndex) => (
+              <a
+                key={sourceIndex}
+                href={source.uri}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 font-semibold text-blue-500 bg-white/20 hover:scale-105 hover:text-blue-400 transition-all duration-200 text-sm outline outline-1 rounded-md p-2"
+                title={source.uri}
+              >
+                {source.faviconUrl && (
+                  <img 
+                    src={source.faviconUrl} 
+                    alt="" 
+                    className="w-6 h-6 bg-white rounded-full p-0.5 flex-shrink-0"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                )}
+                <span>{source.title}</span>
+              </a>
+            ))
+          )}
         </div>
       </div>
     );
@@ -186,16 +226,13 @@ function Text({ result, parts, role, loading, citations }) {
     },
 
     blockquote: ({ children }) => (
-      <motion.blockquote 
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
+      <blockquote 
         className="border-l-4 border-blue-400 bg-white bg-opacity-10 backdrop-blur-sm pl-6 pr-4 py-3 my-4 rounded-r-lg shadow-lg"
       >
         <div className="text-white text-opacity-90 font-light italic text-lg leading-relaxed">
           {children}
         </div>
-      </motion.blockquote>
+      </blockquote>
     ),
     
   };
@@ -315,6 +352,52 @@ function Text({ result, parts, role, loading, citations }) {
               </div>
             ))}
             {renderCitationList()}
+            
+            {/* Render thoughts section if available */}
+            {thoughts && thoughts.length > 0 && role === 'model' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: delayTime + 0.4 }}
+                className="mt-4 pt-4 border-t border-white/20"
+              >
+                <button
+                  onClick={() => setShowThoughts(!showThoughts)}
+                  className="flex items-center space-x-2 text-sm text-white/70 hover:text-white/90 transition-colors duration-200 mb-2"
+                >
+                  <span className="font-medium">💭 Thought Process</span>
+                  <svg
+                    className={`w-4 h-4 transform transition-transform duration-200 ${showThoughts ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {showThoughts && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white/5 rounded-lg p-3 border border-white/10"
+                  >
+                    {thoughts.map((thought, idx) => (
+                      <div key={idx} className="mb-2 last:mb-0 text-sm text-white/80 italic prose-sm">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]} 
+                          components={customRenderers}
+                        >
+                          {thought}
+                        </ReactMarkdown>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
           </motion.div>
         </motion.div>
       )}

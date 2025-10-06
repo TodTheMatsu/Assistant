@@ -222,13 +222,21 @@ function AppContent() {
         // Handle function calls (for flowcharts)
         if (response.functionCalls && response.functionCalls.length > 0) {
           // Handle other function calls if any
-          aiMessage = { role: "model", parts: [{ text: "Function call completed." }] };
-        } else {
-          // Regular text response
           aiMessage = { 
             role: "model", 
-            parts: [{ text: response.text }],
-            citations: response.citations || null
+            parts: response.allParts || [{ text: "Function call completed." }],
+            citations: response.citations || null,
+            thoughts: response.thoughts || null,
+            usageMetadata: response.usageMetadata || null
+          };
+        } else {
+          // Regular text response - preserve all parts including thought signatures
+          aiMessage = { 
+            role: "model", 
+            parts: response.allParts || [{ text: response.text }],
+            citations: response.citations || null,
+            thoughts: response.thoughts || null,
+            usageMetadata: response.usageMetadata || null
           };
         }
         
