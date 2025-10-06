@@ -381,7 +381,7 @@ function Text({ result, parts, role, loading, citations, thoughts, usageMetadata
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.1 }}
                     className="bg-sage/5 rounded-lg p-3 border border-sage/10"
                   >
                     {thoughts.map((thought, idx) => (
