@@ -68,13 +68,13 @@ const WelcomeScreen = ({
             }}
           >
             <motion.path 
-              initial={{ pathLength: 0, fill: "none", opacity: 0 }} 
+              initial={{ pathLength: 0, fill: "none"}} 
               animate={{ 
                 pathLength: 1, 
                 opacity: [0, 1, 0.9, 1]
               }}
               transition={{ 
-                pathLength: { duration: 1.5, delay: 0.5 },
+                pathLength: { duration: 3, delay: 2 },
                 opacity: { 
                   duration: 4, 
                   repeat: Infinity, 
