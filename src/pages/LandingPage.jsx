@@ -249,16 +249,27 @@ const LandingPage = () => {
                 transition={{ duration: 0.5, delay: 0.5 }}
                 className="relative"
               >
-                <div className="bg-dark-gray/50 backdrop-blur-xl border-2 border-sage/30 rounded-2xl p-3 flex items-center space-x-3">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!messageSent) {
+                      handleSendMessage();
+                    }
+                  }}
+                  className="bg-dark-gray/50 backdrop-blur-xl border-2 border-sage/30 rounded-2xl p-3 flex items-center space-x-3"
+                >
                   <input
                     type="text"
                     value={messageSent ? "" : "What can you help me with?"}
                     readOnly
+                    disabled={messageSent}
                     placeholder={messageSent ? "Message sent..." : ""}
-                    className="flex-1 bg-transparent text-light-beige placeholder:text-light-beige/40 text-lg font-thin focus:outline-none cursor-default"
+                    className={`flex-1 bg-transparent text-light-beige placeholder:text-light-beige/40 text-lg font-thin focus:outline-none ${
+                      messageSent ? 'cursor-not-allowed' : 'cursor-default'
+                    }`}
                   />
                   <motion.button
-                    onClick={handleSendMessage}
+                    type="submit"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     disabled={messageSent}
@@ -272,18 +283,18 @@ const LandingPage = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                   </motion.button>
-                </div>
+                </form>
                 {!messageSent && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1, duration: 0.5 }}
-                    className="absolute -bottom-8 left-0 text-xs text-sage/60 flex items-center space-x-1"
+                    className="absolute -right-24 top-1/2 -translate-y-1/2 text-sage/60 flex items-center space-x-2"
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    <span>Press send!</span>
+                    <span className='text-xl'>Try it!</span>
                   </motion.div>
                 )}
               </motion.div>

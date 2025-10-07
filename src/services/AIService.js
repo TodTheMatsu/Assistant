@@ -10,8 +10,8 @@ class AIService {
   cleanHistoryForAI(history) {
     return history.map(entry => ({
       role: entry.role,
-      // Preserve all parts including thought signatures, text, and images
-      parts: entry.parts.filter(part => 
+      // Use allParts if available (includes thought signatures for context), otherwise use parts
+      parts: (entry.allParts || entry.parts).filter(part => 
         part.text || part.inlineData || part.thoughtSignature // Keep text, images, and thought signatures
       )
     })).filter(entry => entry.parts.length > 0); // Remove entries with no valid parts

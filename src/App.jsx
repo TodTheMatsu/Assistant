@@ -224,16 +224,18 @@ function AppContent() {
           // Handle other function calls if any
           aiMessage = { 
             role: "model", 
-            parts: response.allParts || [{ text: "Function call completed." }],
+            parts: [{ text: "Function call completed." }], // Display parts (text only)
+            allParts: response.allParts, // Preserve all parts for history (includes thought signatures)
             citations: response.citations || null,
             thoughts: response.thoughts || null,
             usageMetadata: response.usageMetadata || null
           };
         } else {
-          // Regular text response - preserve all parts including thought signatures
+          // Regular text response - use text for display, preserve allParts for history
           aiMessage = { 
             role: "model", 
-            parts: response.allParts || [{ text: response.text }],
+            parts: [{ text: response.text }], // Display parts (text only, no thought signatures)
+            allParts: response.allParts, // Preserve all parts for history (includes thought signatures)
             citations: response.citations || null,
             thoughts: response.thoughts || null,
             usageMetadata: response.usageMetadata || null
